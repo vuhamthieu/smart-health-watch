@@ -1,5 +1,3 @@
-idf_component_register(
-    SRCS "temp.c"
-    INCLUDE_DIRS "."
-    REQUIRES driver
-)
+idf_component_register(SRCS "temp.c"
+                      INCLUDE_DIRS "."
+                      PRIV_REQUIRES u8g2)

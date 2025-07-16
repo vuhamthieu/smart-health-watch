@@ -5,22 +5,33 @@
       "includePath": [
         "${workspaceFolder}/**",
         "${workspaceFolder}/components/**",
-        "${workspaceFolder}/build/config",    
-        "${workspaceFolder}/build/include",
-        "/home/vuhamthieu/esp/esp-idf/components/**"
+        "${workspaceFolder}/build/config",  
+        "/home/vuhamthieu/esp/esp-idf/components/**",
+        "/home/vuhamthieu/esp/esp-idf/components/driver/include",
+        "/home/vuhamthieu/esp/esp-idf/components/freertos/include",
+        "/home/vuhamthieu/esp/esp-idf/components/esp_common/include",
+        "/home/vuhamthieu/esp/esp-idf/components/esp_system/include",
+        "/home/vuhamthieu/esp/esp-idf/components/soc/include",
+        "/home/vuhamthieu/esp/esp-idf/components/log/include"
       ],
       "defines": [
-        "ESP_PLATFORM"
+        "ESP_PLATFORM",
+        "IDF_VER=\"v6.0-dev-896-g1bbf04cb4c-dirty\"",
+        "SOC_MMU_PAGE_SIZE=CONFIG_MMU_PAGE_SIZE",
+        "SOC_XTAL_FREQ_MHZ=CONFIG_XTAL_FREQ",
+        "_GNU_SOURCE",
+        "_POSIX_READER_WRITER_LOCKS"
       ],
-      "compilerPath": "/home/vuhamthieu/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc",
-      "cStandard": "c11",
+      "compilerPath": "/home/vuhamthieu/.espressif/tools/xtensa-esp-elf/esp-15.1.0_20250607/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc",
+      "cStandard": "gnu17",
       "cppStandard": "c++17",
       "intelliSenseMode": "linux-gcc-x64",
       "browse": {
         "path": [
-          "${workspaceFolder}/build/include",
-          "/home/vuhamthieu/esp/esp-idf/components"
-        ]
+          "${workspaceFolder}/**",
+          "/home/vuhamthieu/esp/esp-idf/components/**"
+        ],
+        "limitSymbolsToIncludedHeaders": true
       }
     }
   ],
