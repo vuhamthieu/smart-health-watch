@@ -7,6 +7,7 @@
         "${workspaceFolder}/components/**",
         "${workspaceFolder}/build/config",  
         "/home/vuhamthieu/esp/esp-idf/components/**",
+        "${workspaceFolder}/components/tasks/include/**",
         "/home/vuhamthieu/esp/esp-idf/components/driver/include",
         "/home/vuhamthieu/esp/esp-idf/components/freertos/include",
         "/home/vuhamthieu/esp/esp-idf/components/esp_common/include",
