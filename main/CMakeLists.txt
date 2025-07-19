@@ -1,11 +1,16 @@
 idf_component_register(
-    SRCS "main.c"
-    INCLUDE_DIRS "."
-    REQUIRES              # liệt kê các component mà main trực tiếp dùng
-        i2c       # component utils/i2c
-        mlx90614          # component drivers/mlx90614
-        ssd1306         # component libs/u8g2   
-        u8g2              # thư viện u8g2
-        temperature  # task đọc nhiệt độ
-        display      # task hiển thị OLED
+    SRCS "main.c" "ui_manager.c"
+    INCLUDE_DIRS "include" "."
+    REQUIRES
+        max30100
+        mlx90614
+        neo6m
+        button
+        i2c
+        u8g2
+        display
+        gps
+        health
+        temperature
+    PRIV_REQUIRES freertos esp_common driver
 )

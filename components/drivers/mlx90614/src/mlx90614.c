@@ -3,13 +3,10 @@
 #include "esp_log.h"
 
 #define MLX90614_ADDR     0x5A
-#define MLX90614_CMD_TEMP 0x07   // object temp register
+#define MLX90614_CMD_TEMP 0x07 
 
 static const char *TAG = "mlx90614";
 
-/**
- * @brief  Đọc raw 16-bit, tính thành °C
- */
 float mlx90614_read_temp(void)
 {
     uint8_t buf[3];
