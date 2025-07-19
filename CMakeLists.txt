@@ -5,5 +5,15 @@
 cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+
+set(EXTRA_COMPONENT_DIRS
+    components/drivers/mlx90614
+    components/drivers/ssd1306
+    components/utils/i2c
+    components/libs/u8g2   # ← đúng đường dẫn đến thư viện u8g2
+    tasks/display
+    tasks/sensor/temperature
+)
+
 project(health_monitor)
 
