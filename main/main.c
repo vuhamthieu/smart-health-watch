@@ -18,26 +18,24 @@ static void handle_button(button_id_t btn) {
     ui_manager_handle_button(&ui, btn);
 }
 
-extern ui_manager_t ui;  // hoặc truyền con trỏ nếu cần
+extern ui_manager_t ui;
 
 void sensor_manager_task(void *pv) {
     while (1) {
         switch (ui.current_state) {
             case UI_STATE_GPS:
-                gps_task(pv);  // tự viết: đọc GPS 1 lần
+                gps_task(pv); 
                 break;
             case UI_STATE_TEMP:
-                temperature_task(pv);  // đo nhiệt độ 1 lần
-                break;
+                temperature_task(pv);  
             case UI_STATE_HR:
-                health_task(pv);  // đo MAX30100 1 lần
+                health_task(pv);
                 break;
             default:
-                // UI_STATE_MENU => không đo gì cả
                 break;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(1000));  // 1 giây đo lại
+        vTaskDelay(pdMS_TO_TICKS(1000));  
     }
 }
 
@@ -48,7 +46,6 @@ void app_main(void) {
         while (1) { vTaskDelay(pdMS_TO_TICKS(1000)); }
     }
 
-    // Khởi tạo màn hình
     u8g2_esp32_hal_t hal = {
         .sda = 21,
         .scl = 22,
@@ -58,13 +55,8 @@ void app_main(void) {
     u8g2_InitDisplay(&u8g2);
     u8g2_SetPowerSave(&u8g2, 0);
 
-    // Khởi tạo UI manager
     ui_manager_init(&ui, &u8g2);
-
-    // Khởi tạo nút bấm
     button_init(handle_button);
-
-    // Khởi tạo các task
     xTaskCreate(display_task, "display", 4096, &ui, 5, NULL);
     xTaskCreate(sensor_manager_task, "sensor", 4096, NULL, 5, NULL);
 }

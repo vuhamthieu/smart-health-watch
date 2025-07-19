@@ -13,6 +13,6 @@ void display_task(void *pvParameters) {
 
     while (1) {
         ui_manager_update_display(ui);
-        vTaskDelay(pdMS_TO_TICKS(100)); // Giảm tần suất cập nhật để tiết kiệm tài nguyên
+        vTaskDelay(pdMS_TO_TICKS(100)); 
     }
 }

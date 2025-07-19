@@ -3,10 +3,10 @@
 #include "driver/gpio.h"
 
 typedef enum {
-    BUTTON_SELECT,   // Chọn mục / xác nhận
-    BUTTON_BACK,     // Quay lại
-    BUTTON_UP,       // Di chuyển lên
-    BUTTON_DOWN,     // Di chuyển xuống
+    BUTTON_SELECT,   
+    BUTTON_BACK,   
+    BUTTON_UP,      
+    BUTTON_DOWN,     
     BUTTON_COUNT
 } button_id_t;
 

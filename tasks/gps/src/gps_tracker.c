@@ -11,12 +11,10 @@ static gps_data_t s_current = {0, 0, false};
 static const uart_port_t GPS_UART_PORT = UART_NUM_1;
 
 void gps_get_data(gps_data_t *out) {
-    // Trả về bản sao dữ liệu mới nhất
     *out = s_current;
 }
 
 void gps_task(void *pvParameters) {
-    // 1) Cấu hình UART cho Neo6M (TX/RX pins tuỳ board)
     uart_config_t uart_cfg = {
         .baud_rate = 9600,
         .data_bits = UART_DATA_8_BITS,
@@ -30,17 +28,12 @@ void gps_task(void *pvParameters) {
 
     uint8_t buf[128];
     while (1) {
-        // 2) Đọc 1 dòng NMEA
         int len = uart_read_bytes(GPS_UART_PORT, buf, sizeof(buf)-1, pdMS_TO_TICKS(2000));
         if (len > 0) {
             buf[len] = '\0';
-            // 3) Tìm chuỗi bắt đầu bằng "$GPRMC" hoặc "$GPGGA"
             if (strncmp((char*)buf, "$GPRMC", 6) == 0) {
-                // TODO: parse GPS RMC sentence: tách các trường, convert lat/lon sang float
-                // Ví dụ đơn giản giả định dữ liệu ok:
-                float lat = /* parse từ buf */ 0.0f;
-                float lon = /* parse từ buf */ 0.0f;
-                // Cập nhật biến toàn cục
+                float lat = 0.0f;
+                float lon = 0.0f;
                 s_current.latitude  = lat;
                 s_current.longitude = lon;
                 s_current.valid     = true;
