@@ -1,6 +1,9 @@
 #include "i2c_common.h"
 #include "driver/i2c.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_err.h"
 
 #define I2C_MASTER_NUM      I2C_NUM_0
 #define I2C_MASTER_SDA_IO   21
@@ -10,9 +13,9 @@
 static const char *TAG = "i2c_common";
 esp_err_t i2c_master_init(void)
 {
-    static bool s_i2c_initialized = false;
+    static bool s_i2c_init = false;
 
-    if (s_i2c_initialized) {
+    if (s_i2c_init) {
         return ESP_OK;
     }
 
@@ -37,7 +40,7 @@ esp_err_t i2c_master_init(void)
         return err;
     }
 
-    s_i2c_initialized = true;
+    s_i2c_init = true;
 
     ESP_LOGI(TAG, "I2C initialized @ GPIO%d(SDA), GPIO%d(SCL)",
              I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);

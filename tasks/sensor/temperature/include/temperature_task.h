@@ -1,7 +1,8 @@
 #ifndef TEMPERATURE_TRACKER_H
 #define TEMPERATURE_TRACKER_H
 
-float temperature_get_data(void);
-void temperature_task(void *pv);
+void    temperature_init(void);
+void    temperature_update(void);
+float   temperature_get_data(void);
 
-#endif
+#endif // TEMPERATURE_TRACKER_H

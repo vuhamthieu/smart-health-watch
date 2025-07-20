@@ -24,12 +24,13 @@ void sensor_manager_task(void *pv) {
     while (1) {
         switch (ui.current_state) {
             case UI_STATE_GPS:
-                gps_task(pv); 
+                gps_update(); 
                 break;
             case UI_STATE_TEMP:
-                temperature_task(pv);  
+                temperature_update();
+                break;
             case UI_STATE_HR:
-                health_task(pv);
+                health_update();
                 break;
             default:
                 break;
@@ -46,17 +47,23 @@ void app_main(void) {
         while (1) { vTaskDelay(pdMS_TO_TICKS(1000)); }
     }
 
-    u8g2_esp32_hal_t hal = {
-        .sda = 21,
-        .scl = 22,
-    };
+    gps_init();
+    temperature_init();   
+    health_init();
+
+    u8g2_esp32_hal_t hal = { .sda = 21, .scl = 22 };
     u8g2_esp32_hal_init(&hal);
-    u8g2_Setup_ssd1306_i2c_128x64_noname_f(&u8g2, U8G2_R0, u8g2_esp32_i2c_byte_cb, u8g2_esp32_gpio_and_delay_cb);
+    u8g2_Setup_ssd1306_i2c_128x64_noname_f(
+        &u8g2, U8G2_R0,
+        u8g2_esp32_i2c_byte_cb,
+        u8g2_esp32_gpio_and_delay_cb
+    );
     u8g2_InitDisplay(&u8g2);
     u8g2_SetPowerSave(&u8g2, 0);
 
     ui_manager_init(&ui, &u8g2);
     button_init(handle_button);
-    xTaskCreate(display_task, "display", 4096, &ui, 5, NULL);
     xTaskCreate(sensor_manager_task, "sensor", 4096, NULL, 5, NULL);
+    xTaskCreate(display_task, "display", 4096, &ui, 5, NULL);
 }
+    
