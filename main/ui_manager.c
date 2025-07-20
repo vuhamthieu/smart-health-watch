@@ -6,11 +6,12 @@
 #include "button.h"
 #include "gps_tracker.h"
 #include "health_tracker.h"
-#include "temperature_task.h" 
+#include "temperature_task.h"
 
 static const char *TAG = "UI_MANAGER";
 
-void ui_manager_init(ui_manager_t *ui, u8g2_t *u8g2) {
+void ui_manager_init(ui_manager_t *ui, u8g2_t *u8g2)
+{
     ui->u8g2 = u8g2;
     ui->current_state = UI_STATE_MENU;
     ui->selected_index = 0;
@@ -21,17 +22,31 @@ void ui_manager_init(ui_manager_t *ui, u8g2_t *u8g2) {
     ESP_LOGI(TAG, "UI Manager initialized");
 }
 
-void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn) {
-    switch (ui->current_state) {
+void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
+{
+    switch (ui->current_state)
+    {
         case UI_STATE_MENU:
             if (btn == BUTTON_UP && ui->selected_index > 0) {
                 ui->selected_index--;
-            } else if (btn == BUTTON_DOWN && ui->selected_index < ui->menu_item_count - 1) {
+            }
+            else if (btn == BUTTON_DOWN && ui->selected_index < ui->menu_item_count - 1) {
                 ui->selected_index++;
-            } else if (btn == BUTTON_SELECT) {
-                ui->current_state = ui->menu_items[ui->selected_index].state;
+            }
+            else if (btn == BUTTON_SELECT) {
+                ui_state_t new_state = ui->menu_items[ui->selected_index].state;
+                ui->current_state = new_state;
+                // initialize the just‑selected sensor
+                if (new_state == UI_STATE_TEMP) {
+                    temperature_init();
+                } else if (new_state == UI_STATE_HR) {
+                    health_init();
+                } else if (new_state == UI_STATE_GPS) {
+                    gps_init();
+                }
             }
             break;
+
         case UI_STATE_GPS:
         case UI_STATE_TEMP:
         case UI_STATE_HR:
@@ -40,58 +55,68 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn) {
             }
             break;
     }
-    ESP_LOGI(TAG, "Button %d -> State %d, Index %d", btn, ui->current_state, ui->selected_index);
+    ESP_LOGI(TAG, "Button %d -> State %d, Index %d",
+             btn, ui->current_state, ui->selected_index);
 }
 
-void ui_manager_update_display(ui_manager_t *ui) {
+void ui_manager_update_display(ui_manager_t *ui)
+{
     u8g2_ClearBuffer(ui->u8g2);
     u8g2_SetFont(ui->u8g2, u8g2_font_ncenB08_tr);
     char buf[50];
 
-    switch (ui->current_state) {
+    switch (ui->current_state)
+    {
         case UI_STATE_MENU:
             for (int i = 0; i < ui->menu_item_count; i++) {
                 if (i == ui->selected_index) {
-                    u8g2_DrawStr(ui->u8g2, 0, (i + 1) * 15, "->");
-                    u8g2_DrawStr(ui->u8g2, 20, (i + 1) * 15, ui->menu_items[i].name);
+                    u8g2_DrawStr(ui->u8g2, 0, (i+1)*15, "->");
+                    u8g2_DrawStr(ui->u8g2, 20, (i+1)*15, ui->menu_items[i].name);
                 } else {
-                    u8g2_DrawStr(ui->u8g2, 20, (i + 1) * 15, ui->menu_items[i].name);
+                    u8g2_DrawStr(ui->u8g2, 20, (i+1)*15, ui->menu_items[i].name);
                 }
             }
             break;
+
         case UI_STATE_GPS: {
-            gps_data_t gps_data;
-            gps_get_data(&gps_data);
-            if (gps_data.valid) {
-                snprintf(buf, sizeof(buf), "Lat: %.6f\nLon: %.6f", gps_data.latitude, gps_data.longitude);
-            } else {
-                snprintf(buf, sizeof(buf), "GPS: No signal");
-            }
+            gps_data_t gps;
+            gps_get_data(&gps);
             u8g2_DrawStr(ui->u8g2, 0, 15, "GPS LOCATION");
-            u8g2_DrawStr(ui->u8g2, 0, 35, buf);
+            if (gps.valid) {
+                snprintf(buf, sizeof(buf), "Lat: %.6f", gps.latitude);
+                u8g2_DrawStr(ui->u8g2, 0, 35, buf);
+                snprintf(buf, sizeof(buf), "Lon: %.6f", gps.longitude);
+                u8g2_DrawStr(ui->u8g2, 0, 50, buf);
+            } else {
+                u8g2_DrawStr(ui->u8g2, 0, 35, "No signal");
+            }
             break;
         }
+
         case UI_STATE_TEMP: {
-            float temp = temperature_get_data();
-            if (temp == -273.15f) {
+            float t = temperature_get_data();
+            u8g2_DrawStr(ui->u8g2, 0, 15, "BODY TEMPERATURE");
+            if (t <= -273.15f) {
                 u8g2_DrawStr(ui->u8g2, 0, 35, "Scanning ...");
             } else {
-                snprintf(buf, sizeof(buf), "Temp: %.2f C", temp);
+                snprintf(buf, sizeof(buf), "Temp: %.2f C", t);
                 u8g2_DrawStr(ui->u8g2, 0, 35, buf);
             }
-            u8g2_DrawStr(ui->u8g2, 0, 15, "BODY TEMPERATURE");
             break;
         }
+
         case UI_STATE_HR: {
-            health_data_t health_data;
-            health_get_data(&health_data);
-            if (health_data.valid) {
-                snprintf(buf, sizeof(buf), "HR: %d bpm\nSpO2: %d%%", health_data.heart_rate, health_data.spo2);
-            } else {
-                snprintf(buf, sizeof(buf), "No data");
-            }
+            health_data_t hd;
+            health_get_data(&hd);
             u8g2_DrawStr(ui->u8g2, 0, 15, "HEART RATE + SPO2");
-            u8g2_DrawStr(ui->u8g2, 0, 35, buf);
+            if (hd.heart_rate > 0 && hd.spo2 > 0) {
+                snprintf(buf, sizeof(buf), "HR: %d bpm", hd.heart_rate);
+                u8g2_DrawStr(ui->u8g2, 0, 35, buf);
+                snprintf(buf, sizeof(buf), "SpO2: %d%%", hd.spo2);
+                u8g2_DrawStr(ui->u8g2, 0, 50, buf);
+            } else {
+                u8g2_DrawStr(ui->u8g2, 0, 35, "Scanning ...");
+            }
             break;
         }
     }
