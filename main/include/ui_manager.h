@@ -12,6 +12,11 @@ typedef enum {
 } ui_state_t;
 
 typedef struct {
+    int battery;
+    char date[11]; // "YYYY-MM-DD"
+} ui_info_t;
+
+typedef struct {
     const char *name;
     ui_state_t state;
 } menu_item_t;
@@ -22,6 +27,7 @@ typedef struct {
     int selected_index;
     menu_item_t menu_items[3];
     int menu_item_count;
+    ui_info_t info; 
 } ui_manager_t;
 
 void ui_manager_init(ui_manager_t *ui, u8g2_t *u8g2);
