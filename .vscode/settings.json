@@ -24,6 +24,7 @@
     "esp_log.h": "c",
     "format": "c",
     "future": "cpp",
-    "i2c.h": "c"
+    "i2c.h": "c",
+    "temperature_task.h": "c"
   }
 }

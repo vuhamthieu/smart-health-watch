@@ -1,33 +1,21 @@
 #include "mlx90614.h"
-#include "driver/i2c.h"
+#include "i2c_common.h"
 #include "esp_log.h"
 
 #define MLX90614_ADDR     0x5A
 #define MLX90614_CMD_TEMP 0x07 
 
-static const char *TAG = "mlx90614";
+static const char *TAG = "MLX90614";
 
 float mlx90614_read_temp(void)
 {
+    uint8_t cmd = MLX90614_CMD_TEMP;
     uint8_t buf[3];
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-
-    // Write pointer
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (MLX90614_ADDR << 1) | I2C_MASTER_WRITE, true);
-    i2c_master_write_byte(cmd, MLX90614_CMD_TEMP, true);
-    // Read 3 bytes
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (MLX90614_ADDR << 1) | I2C_MASTER_READ, true);
-    i2c_master_read(cmd, buf, 2, I2C_MASTER_ACK);
-    i2c_master_read_byte(cmd, buf + 2, I2C_MASTER_NACK);
-    i2c_master_stop(cmd);
-
-    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, pdMS_TO_TICKS(100));
-    i2c_cmd_link_delete(cmd);
+    
+    esp_err_t ret = i2c_common_write_read_device(MLX90614_ADDR, &cmd, 1, buf, 3);
 
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "I2C read failed: %d", ret);
+        ESP_LOGE(TAG, "I2C read failed: %s", esp_err_to_name(ret));
         return -273.15f;
     }
 
