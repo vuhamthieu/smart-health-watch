@@ -19,45 +19,57 @@ void ui_manager_init(ui_manager_t *ui, u8g2_t *u8g2)
     memset(ui->info.date, 0, sizeof(ui->info.date));
     ui->info.battery = 100;
     ui->menu_items[0] = (menu_item_t){"GPS Location", UI_STATE_GPS};
-    ui->menu_items[1] = (menu_item_t){"Body Temperature", UI_STATE_TEMP};
+    ui->menu_items[1] = (menu_item_t){"Body Temperature", UI_STATE_TEMP_IDLE};
     ui->menu_items[2] = (menu_item_t){"Heart Rate + SpO2", UI_STATE_HR};
     ESP_LOGI(TAG, "UI Manager initialized");
 }
 
 void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
 {
-    switch (ui->current_state)
-    {
+    switch (ui->current_state) {
         case UI_STATE_MENU:
             if (btn == BUTTON_UP && ui->selected_index > 0) {
                 ui->selected_index--;
-            }
-            else if (btn == BUTTON_DOWN && ui->selected_index < ui->menu_item_count - 1) {
+            } else if (btn == BUTTON_DOWN && ui->selected_index < ui->menu_item_count - 1) {
                 ui->selected_index++;
-            }
-            else if (btn == BUTTON_SELECT) {
+            } else if (btn == BUTTON_SELECT) {
                 ui_state_t new_state = ui->menu_items[ui->selected_index].state;
-                ui->current_state = new_state;
-                if (new_state == UI_STATE_TEMP) {
+                if (new_state == UI_STATE_TEMP_IDLE) {  
                     temperature_init();
-                } else if (new_state == UI_STATE_HR) {
-                    health_init();
-                } else if (new_state == UI_STATE_GPS) {
-                    gps_init();
+                    ui->scan_start_time_ms = 0;
+                    ui->scan_done = false;
                 }
+                ui->current_state = new_state;
+            }
+            break;
+
+        case UI_STATE_TEMP_IDLE:
+        case UI_STATE_TEMP_RESULT:
+            if (btn == BUTTON_SELECT) {
+                temperature_init();
+                ui->scan_start_time_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
+                ui->scan_done = false;
+                ui->current_state = UI_STATE_TEMP_SCANNING;
+                ESP_LOGI(TAG, "Start temperature scanning");
+            }
+            if (btn == BUTTON_BACK) {
+                ui->current_state = UI_STATE_MENU;
+            }
+            break;
+
+        case UI_STATE_TEMP_SCANNING:
+            if (btn == BUTTON_BACK) {
+                ui->current_state = UI_STATE_MENU;
             }
             break;
 
         case UI_STATE_GPS:
-        case UI_STATE_TEMP:
         case UI_STATE_HR:
             if (btn == BUTTON_BACK) {
                 ui->current_state = UI_STATE_MENU;
             }
             break;
     }
-    ESP_LOGI(TAG, "Button %d -> State %d, Index %d",
-             btn, ui->current_state, ui->selected_index);
 }
 
 void ui_manager_update_display(ui_manager_t *ui)
@@ -73,12 +85,9 @@ void ui_manager_update_display(ui_manager_t *ui)
     }
 
     int battery = ui->info.battery;
-    // battery frame: 16x8 pixel
     u8g2_DrawFrame(ui->u8g2, 100, 2, 16, 8);
-    // + polar: 2x4 pixel
     u8g2_DrawBox(ui->u8g2, 116, 4, 2, 4);
-    // battery pảrt: 4 part, 3x6 pixel each
-    int bars = (battery + 24) / 25; 
+    int bars = (battery + 24) / 25;
     for (int i = 0; i < bars && i < 4; i++) {
         u8g2_DrawBox(ui->u8g2, 102 + i * 3, 4, 2, 4);
     }
@@ -111,14 +120,29 @@ void ui_manager_update_display(ui_manager_t *ui)
             break;
         }
 
-        case UI_STATE_TEMP: {
+        case UI_STATE_TEMP_IDLE:
+            u8g2_DrawStr(ui->u8g2, 0, 30, "BODY TEMPERATURE");
+            u8g2_DrawStr(ui->u8g2, 0, 50, "Press select to scan");
+            break;
+
+        case UI_STATE_TEMP_SCANNING:
+            u8g2_DrawStr(ui->u8g2, 0, 30, "BODY TEMPERATURE");
+            u8g2_DrawStr(ui->u8g2, 0, 45, "Measuring...");
+            u8g2_DrawStr(ui->u8g2, 0, 60, "Please wait 30 seconds");
+            break;
+
+        case UI_STATE_TEMP_RESULT: {
             float t = temperature_get_data();
             u8g2_DrawStr(ui->u8g2, 0, 30, "BODY TEMPERATURE");
-            if (t <= -273.15f) {
-                u8g2_DrawStr(ui->u8g2, 0, 50, "Scanning ...");
+            if (t > -273.15f) {
+                snprintf(buf, sizeof(buf), "Done! Temp: %.2f C", t);
+                u8g2_DrawStr(ui->u8g2, 0, 45, buf);
+                u8g2_DrawStr(ui->u8g2, 0, 60, "Press select to rescan");
+
             } else {
-                snprintf(buf, sizeof(buf), "Temp: %.2f C", t);
-                u8g2_DrawStr(ui->u8g2, 0, 50, buf);
+                u8g2_DrawStr(ui->u8g2, 0, 45, "Sensor error");
+                u8g2_DrawStr(ui->u8g2, 0, 60, "Press select to rescan");
+
             }
             break;
         }
@@ -129,14 +153,18 @@ void ui_manager_update_display(ui_manager_t *ui)
             u8g2_DrawStr(ui->u8g2, 0, 30, "HEART RATE + SPO2");
             if (hd.heart_rate > 0 && hd.spo2 > 0) {
                 snprintf(buf, sizeof(buf), "HR: %d bpm", hd.heart_rate);
-                u8g2_DrawStr(ui->u8g2, 0, 50, buf);
+                u8g2_DrawStr(ui->u8g2, 0, 45, buf);
                 snprintf(buf, sizeof(buf), "SpO2: %d%%", hd.spo2);
-                u8g2_DrawStr(ui->u8g2, 0, 65, buf);
+                u8g2_DrawStr(ui->u8g2, 0, 60, buf);
             } else {
                 u8g2_DrawStr(ui->u8g2, 0, 50, "Scanning ...");
             }
             break;
         }
+
+        default:
+            u8g2_DrawStr(ui->u8g2, 0, 30, "Unknown state");
+            break;
     }
 
     u8g2_SendBuffer(ui->u8g2);
