@@ -10,9 +10,9 @@ typedef struct {
     bool valid;
 } health_data_t;
 
+
 void health_init(void);
 
-// Read one HR/SpO₂ sample; update the global health_data internally
 void health_update(void);
 
 void health_get_data(health_data_t *out);
