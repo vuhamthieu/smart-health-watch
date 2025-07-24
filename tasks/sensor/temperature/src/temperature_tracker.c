@@ -24,11 +24,12 @@ void temperature_update(void) {
         if (t > -273.15f) {
             last_valid = t;
             ESP_LOGI(TAG, "Temperature: %.2f C", t);
+            break; 
         } else {
             ESP_LOGW(TAG, "mlx90614_read_temp failed (retry %d)", i + 1);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(300));
+        vTaskDelay(pdMS_TO_TICKS(500)); 
     }
 
     if (last_valid > -273.15f) {
@@ -40,6 +41,7 @@ void temperature_update(void) {
         s_temp = s_temp_backup;
     }
 }
+
 
 
 float temperature_get_data(void) {
