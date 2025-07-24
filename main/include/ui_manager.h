@@ -5,6 +5,7 @@
 
 typedef enum
 {
+    UI_STATE_HOME, 
     UI_STATE_MENU,
     UI_STATE_TEMP_IDLE,
     UI_STATE_TEMP_SCANNING,

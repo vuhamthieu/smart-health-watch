@@ -6,7 +6,7 @@
 #include "freertos/semphr.h"
 
 static const char *TAG = "i2c_common";
- SemaphoreHandle_t s_i2c_mutex = NULL;
+SemaphoreHandle_t s_i2c_mutex = NULL;
 static bool s_i2c_initialized = false;
 
 esp_err_t i2c_master_init(void)
@@ -29,7 +29,7 @@ esp_err_t i2c_master_init(void)
         .scl_io_num = I2C_MASTER_SCL_IO,
         .sda_pullup_en = GPIO_PULLUP_ENABLE,  
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = 100000,  
+        .master.clk_speed = 50000,  
         .clk_flags = 0
     };
 
@@ -113,22 +113,21 @@ esp_err_t i2c_common_write_read_device(i2c_port_t i2c_num, uint8_t device_addr,
         return ESP_ERR_TIMEOUT;
     }
 
-    esp_err_t ret = ESP_OK;
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    esp_err_t ret = ESP_OK;  
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();  
     if (cmd == NULL) {
         xSemaphoreGive(s_i2c_mutex);
         return ESP_ERR_NO_MEM;
     }
 
-    // Write với repeated start (critical cho MLX90614)
+    // Write phase
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (device_addr << 1) | I2C_MASTER_WRITE, true);
     if (write_size > 0) {
         i2c_master_write(cmd, write_buffer, write_size, true);
     }
     
-    // REPEATED START
-    i2c_master_start(cmd);
+    i2c_master_start(cmd);  
     i2c_master_write_byte(cmd, (device_addr << 1) | I2C_MASTER_READ, true);
     
     if (read_size > 0) {
@@ -139,15 +138,10 @@ esp_err_t i2c_common_write_read_device(i2c_port_t i2c_num, uint8_t device_addr,
     }
     i2c_master_stop(cmd);
     
-    ret = i2c_master_cmd_begin(i2c_num, cmd, ticks_to_wait);
+    ret = i2c_master_cmd_begin(i2c_num, cmd, ticks_to_wait);  
     i2c_cmd_link_delete(cmd);
 
     xSemaphoreGive(s_i2c_mutex);
-    
-    if (ret != ESP_OK) {
-        ESP_LOGD(TAG, "I2C write-read failed: %s (addr=0x%02X)", 
-                 esp_err_to_name(ret), device_addr);
-    }
     
     return ret;
 }
