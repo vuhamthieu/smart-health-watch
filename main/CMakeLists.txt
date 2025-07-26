@@ -1,6 +1,6 @@
 idf_component_register(
     SRCS "main.c" "ui_manager.c"
-    INCLUDE_DIRS "include" "."
+    INCLUDE_DIRS "include" "." 
     REQUIRES
         max30100
         mlx90614
@@ -8,9 +8,12 @@ idf_component_register(
         button
         i2c
         u8g2
-        display
         gps
         health
         temperature
-    PRIV_REQUIRES freertos esp_common driver
+        lvgl
+        lvgl_esp32_drivers
+        lvgl__lvgl
+    PRIV_REQUIRES freertos esp_common driver esp_lcd
 )
+

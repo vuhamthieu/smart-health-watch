@@ -53,7 +53,7 @@ void button_init(button_callback_t cb) {
     gpio_config(&io_conf);
 
     gpio_evt_queue = xQueueCreate(10, sizeof(button_id_t));
-    xTaskCreate(button_task, "button_task", 2048, NULL, 10, NULL);
+    xTaskCreate(button_task, "button_task", 4096, NULL, 10, NULL);
 
     gpio_install_isr_service(0);
     gpio_isr_handler_add(BUTTON_SELECT_GPIO, gpio_isr_handler, (void *)BUTTON_SELECT);

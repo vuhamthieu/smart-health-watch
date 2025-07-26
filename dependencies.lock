@@ -3,8 +3,15 @@ dependencies:
     source:
       type: idf
     version: 6.0.0
+  lvgl/lvgl:
+    dependencies: []
+    source:
+      path: /home/vuhamthieu/Projects/Embedded/health_monitor/components/lvgl__lvgl
+      type: local
+    version: 8.3.11
 direct_dependencies:
 - idf
-manifest_hash: 68ae537f1c54a34ad134f35673ff521552b47f9e6e3b0c779a11acf52eacc7f7
+- lvgl/lvgl
+manifest_hash: f161a712c107120cf456a2f2d44e8f23e47f3b4328d3123165b8df2e01bd1f1d
 target: esp32
 version: 2.0.0

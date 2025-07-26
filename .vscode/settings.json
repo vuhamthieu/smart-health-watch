@@ -26,6 +26,8 @@
     "future": "cpp",
     "i2c.h": "c",
     "temperature_task.h": "c",
-    "u8g2_esp32_hal.h": "c"
+    "u8g2_esp32_hal.h": "c",
+    "lvgl_helpers.h": "c",
+    "cstdlib": "c"
   }
 }

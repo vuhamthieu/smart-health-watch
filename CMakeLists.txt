@@ -13,10 +13,11 @@ set(EXTRA_COMPONENT_DIRS
     components/utils/i2c
     components/libs/u8g2
     components/libs/max30100
-    tasks/display
     tasks/gps
     tasks/sensor/health
     tasks/sensor/temperature
+    components/lvgl_esp32_drivers
 )
+
 
 project(health_monitor)

@@ -9,7 +9,6 @@ static const char *TAG = "HEALTH_TRACKER";
 
 static max30100_config_t s_config;
 static health_data_t s_data = {0, 0, false};
-static int no_pulse_count = 0;
 
 void health_init(void)
 {
@@ -46,11 +45,7 @@ void health_update(void)
     }
     else
     {
-        no_pulse_count++;
-        if (no_pulse_count % 50 == 0)
-        {
-            ESP_LOGW("HEALTH", "No pulse detected for %d updates.", no_pulse_count);
-        }
+            ESP_LOGW("HEALTH", "No pulse detected for %d updates.");
     }
 }
 
