@@ -2,19 +2,29 @@
 #include "lvgl.h"
 #include "button.h"
 
-#define COLOR_BG_NORMAL lv_color_hex(0x857B7B)  
-#define COLOR_BG_SELECTED lv_color_hex(0x4A90E2) 
-#define COLOR_TEXT_NORMAL lv_color_white()
+#define COLOR_BG_NORMAL    lv_color_hex(0x242424)
+#define COLOR_BG_SELECTED  lv_color_hex(0x919191)
+#define COLOR_TEXT_NORMAL  lv_color_white()
 #define COLOR_TEXT_SELECTED lv_color_white()
+#define COLOR_TEXT lv_color_hex(0xFFFFFF)
+
+extern const lv_img_dsc_t gps_icon;
+
+#define GPS_ICON  (&gps_icon)
+
+
 
 typedef enum {
     UI_STATE_HOME,
     UI_STATE_MENU,
     UI_STATE_TEMP_IDLE,
-    UI_STATE_TEMP_SCANNING,  
+    UI_STATE_TEMP_SCANNING,
     UI_STATE_TEMP_RESULT,
     UI_STATE_HR,
-    UI_STATE_GPS
+    UI_STATE_GPS,
+    UI_STATE_DATA,
+    UI_STATE_WIFI,
+    UI_STATE_BLUETOOTH
 } ui_state_t;
 
 typedef struct {
@@ -24,51 +34,67 @@ typedef struct {
 
 typedef struct {
     const char *name;
-    ui_state_t state;  
+    ui_state_t  state;
 } menu_item_t;
 
 typedef struct {
-    /* LVGL screen objects */
+    /* Screens */
     lv_obj_t *scr_home;
     lv_obj_t *scr_menu;
     lv_obj_t *scr_temp;
     lv_obj_t *scr_hr;
     lv_obj_t *scr_gps;
-    
-    /* LVGL widget objects */
+
+    /* Common widgets */
     lv_obj_t *lbl_battery;
     lv_obj_t *lbl_date;
+
+    /* Home */
+    lv_obj_t *img_bg;
+    lv_obj_t *lbl_datetime;
+
+    /* Menu (single lv_list) */
+    lv_obj_t *list_menu;
+    /* Menu data */
+    menu_item_t menu_items[10];
+    int          menu_item_count;
+    int          selected_index;
+
+    /* Temp screen */
     lv_obj_t *lbl_temp;
+
+    /* HR screen */
     lv_obj_t *lbl_hr;
     lv_obj_t *lbl_spo2;
-    lv_obj_t *lbl_gps;
     lv_obj_t *img_heart;
-    lv_obj_t *list_menu;
-    
-    /* Menu management*/
-    lv_obj_t *menu_buttons[10];   
-    int menu_item_count;
-    int selected_index;
-    int visible_start;
-    int max_visible_items;
-    
-    /* State management */
+
+    /* GPS screen */
+    lv_obj_t *lbl_gps;
+
+    /* State & info */
     ui_state_t current_state;
-    menu_item_t menu_items[10];      
-    ui_info_t info;
-    uint32_t scan_start_time_ms;
-    bool scan_done;
+    ui_info_t  info;
+    uint32_t   scan_start_time_ms;
+    bool       scan_done;
 } ui_manager_t;
 
-/* API functions */
+
 void ui_reset_screen_state(ui_manager_t *ui, ui_state_t state);
+
 void ui_manager_init(ui_manager_t *ui);
+
 void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn);
+
 void ui_switch(ui_manager_t *ui, ui_state_t new_state);
+
 void ui_set_date(ui_manager_t *ui, const char *date);
+
 void ui_set_battery(ui_manager_t *ui, int percent);
+
 void ui_update_temp(ui_manager_t *ui, float t);
+
 void ui_update_hr(ui_manager_t *ui, int hr, int spo2);
+
 void ui_update_gps(ui_manager_t *ui, float lat, float lon, bool valid);
 
 
