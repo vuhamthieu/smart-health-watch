@@ -42,7 +42,7 @@ void sensor_manager_task(void *pv)
 {
     ESP_LOGI("SENSOR_MANAGER", "Task started");
 
-    bool loggedResult = false;  
+    bool loggedResult = false;
     for (;;)
     {
         switch (ui.current_state)
@@ -51,6 +51,9 @@ void sensor_manager_task(void *pv)
         {
             loggedResult = false;
             temperature_update();
+
+            ui_update_temp(&ui, 0);
+
             uint32_t now = xTaskGetTickCount() * portTICK_PERIOD_MS;
             if (!ui.scan_done && now - ui.scan_start_time_ms >= 10000)
             {
@@ -63,10 +66,14 @@ void sensor_manager_task(void *pv)
 
         case UI_STATE_TEMP_RESULT:
         {
-            if (!loggedResult) {
-            float t = temperature_get_data();
-            ESP_LOGI("SENSOR", "-- TEMP_RESULT → %.2f°C", t);
-            loggedResult = true;
+            if (!loggedResult)
+            {
+                float t = temperature_get_data();
+                ESP_LOGI("SENSOR", "-- TEMP_RESULT → %.2f°C", t);
+
+                ui_update_temp(&ui, t);
+
+                loggedResult = true;
             }
             break;
         }
@@ -75,6 +82,12 @@ void sensor_manager_task(void *pv)
         {
             ESP_LOGI("SENSOR", "-- STATE_HR --");
             health_update();
+
+            health_data_t hd;
+            health_get_data(&hd);
+            ui_update_hr(&ui, hd.heart_rate, hd.spo2);
+
+            ESP_LOGI("SENSOR", "HR=%d bpm, SpO2=%d%%", hd.heart_rate, hd.spo2);
             break;
         }
 
@@ -83,6 +96,9 @@ void sensor_manager_task(void *pv)
             ESP_LOGI("SENSOR", "-- STATE_GPS --");
             gps_data_t gps;
             gps_get_data(&gps);
+
+            ui_update_gps(&ui, gps.latitude, gps.longitude, gps.valid);
+
             if (gps.valid)
             {
                 ESP_LOGI("SENSOR", "Lat=%.6f, Lon=%.6f", gps.latitude, gps.longitude);
@@ -101,14 +117,13 @@ void sensor_manager_task(void *pv)
 
         default:
             ESP_LOGW("SENSOR_MANAGER", "Unknown UI state: %d", ui.current_state);
-            loggedResult = false; 
+            loggedResult = false;
             break;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(30));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
-
 
 void app_main(void)
 {
@@ -133,18 +148,16 @@ void app_main(void)
     // Setup LVGL tick timer
     const esp_timer_create_args_t lv_tick_timer = {
         .callback = &lv_tick_task,
-        .name = "lv_tick"
-    };
+        .name = "lv_tick"};
     esp_timer_handle_t h;
     ESP_ERROR_CHECK(esp_timer_create(&lv_tick_timer, &h));
     ESP_ERROR_CHECK(esp_timer_start_periodic(h, 1000));
 
     lvgl_driver_init();
 
-    // SMALLER buffer + double buffering để giảm nhiễu
     static lv_disp_draw_buf_t draw_buf;
-    static lv_color_t buf1[128 * 10];  
-    static lv_color_t buf2[128 * 10];  
+    static lv_color_t buf1[128 * 10];
+    static lv_color_t buf2[128 * 10];
     lv_disp_draw_buf_init(&draw_buf, buf1, buf2, 128 * 10);
 
     static lv_disp_drv_t disp_drv;
@@ -164,7 +177,7 @@ void app_main(void)
     button_init(handle_button);
 
     /* ====== Create Tasks ====== */
-    xTaskCreatePinnedToCore(gui_task, "gui", 4096, NULL, 2, NULL, 0);  // Pin to Core 0
+    xTaskCreatePinnedToCore(gui_task, "gui", 4096, NULL, 2, NULL, 0); // Pin to Core 0
     xTaskCreate(sensor_manager_task, "sensor", 4096, NULL, 5, NULL);
 
     ESP_LOGI("MAIN", "System initialized with LVGL");
