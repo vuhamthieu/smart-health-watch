@@ -11,12 +11,18 @@
 #include "freertos/task.h"
 #include "The_Artists_Garden_at_Eragny.c"
 #include "gps_icon.c"
+#include "temp_icon.c"
+#include "heart_icon.c"
+#include "data_icon.c"
+#include "wifi_icon.c"
+#include "bluetooth_icon.c"
+#include "notify_icon.c"
 
 static const char *TAG = "UI_MANAGER";
 
-static const void *icons[] = {GPS_ICON, LV_SYMBOL_REFRESH, LV_SYMBOL_WARNING, LV_SYMBOL_SETTINGS, LV_SYMBOL_WIFI, LV_SYMBOL_BLUETOOTH};
+static const void *icons[] = {NOTIFY_ICON, GPS_ICON, TEMP_ICON, HEART_ICON, DATA_ICON, WIFI_ICON, BLUETOOTH_ICON};
 
-static const char *labels[] = {"GPS", "Body Temp", "HR, SpO2", "Dashboard", "Wifi", "Bluetooth"};
+static const char *labels[] = {"Notifications", "GPS", "Body Temp", "Heart rate", "Dashboard", "Wifi", "Bluetooth"};
 
 void ui_menu_update_selection(ui_manager_t *ui)
 {
@@ -60,15 +66,16 @@ void ui_create_menu(ui_manager_t *ui)
 void ui_manager_init(ui_manager_t *ui)
 {
     memset(ui, 0, sizeof(*ui));
-    ui->menu_item_count = 6;
+    ui->menu_item_count = 7;
     ui->selected_index = 0;
     // Menu items
-    ui->menu_items[0] = (menu_item_t){"GPS Tracking", UI_STATE_GPS};
-    ui->menu_items[1] = (menu_item_t){"Temperature", UI_STATE_TEMP_IDLE};
-    ui->menu_items[2] = (menu_item_t){"Heart Rate", UI_STATE_HR};
-    ui->menu_items[3] = (menu_item_t){"Dashboard", UI_STATE_DATA};
-    ui->menu_items[4] = (menu_item_t){"Wifi", UI_STATE_WIFI};
-    ui->menu_items[5] = (menu_item_t){"Bluetooth", UI_STATE_BLUETOOTH};
+    ui->menu_items[0] = (menu_item_t){"Notifications", UI_STATE_NOTIFY};
+    ui->menu_items[1] = (menu_item_t){"GPS Tracking", UI_STATE_GPS};
+    ui->menu_items[2] = (menu_item_t){"Temperature", UI_STATE_TEMP_IDLE};
+    ui->menu_items[3] = (menu_item_t){"Heart Rate", UI_STATE_HR};
+    ui->menu_items[4] = (menu_item_t){"Dashboard", UI_STATE_DATA};
+    ui->menu_items[5] = (menu_item_t){"Wifi", UI_STATE_WIFI};
+    ui->menu_items[6] = (menu_item_t){"Bluetooth", UI_STATE_BLUETOOTH};
 
     // Set dark theme globally
     lv_theme_t *theme = lv_theme_default_init(lv_disp_get_default(),

@@ -9,14 +9,27 @@
 #define COLOR_TEXT lv_color_hex(0xFFFFFF)
 
 extern const lv_img_dsc_t gps_icon;
+extern const lv_img_dsc_t temp_icon;
+extern const lv_img_dsc_t heart_icon;
+extern const lv_img_dsc_t data_icon;
+extern const lv_img_dsc_t notify_icon;
+extern const lv_img_dsc_t wifi_icon;
+extern const lv_img_dsc_t bluetooth_icon;
+
 
 #define GPS_ICON  (&gps_icon)
-
+#define TEMP_ICON  (&temp_icon)
+#define HEART_ICON  (&heart_icon)
+#define DATA_ICON  (&data_icon)
+#define NOTIFY_ICON  (&notify_icon)
+#define WIFI_ICON  (&wifi_icon)
+#define BLUETOOTH_ICON  (&bluetooth_icon)
 
 
 typedef enum {
     UI_STATE_HOME,
     UI_STATE_MENU,
+    UI_STATE_NOTIFY,
     UI_STATE_TEMP_IDLE,
     UI_STATE_TEMP_SCANNING,
     UI_STATE_TEMP_RESULT,
