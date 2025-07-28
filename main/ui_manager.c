@@ -10,111 +10,65 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "The_Artists_Garden_at_Eragny.c"
+#include "gps_icon.c"
 
 static const char *TAG = "UI_MANAGER";
 
-// Animation callback cho heart blink
-static void anim_heart_cb(void *obj, int32_t v)
-{
-    lv_obj_set_style_opa(obj, v, LV_PART_MAIN);
-}
+static const void *icons[] = {GPS_ICON, LV_SYMBOL_REFRESH, LV_SYMBOL_WARNING, LV_SYMBOL_SETTINGS, LV_SYMBOL_WIFI, LV_SYMBOL_BLUETOOTH};
+
+static const char *labels[] = {"GPS", "Body Temp", "HR, SpO2", "Dashboard", "Wifi", "Bluetooth"};
 
 void ui_menu_update_selection(ui_manager_t *ui)
 {
-    lv_obj_t *menu_cont = lv_obj_get_child(ui->scr_menu, 0);
-    if (!menu_cont)
-        return;
+    if (!ui->list_menu) return;
 
-    for (int i = 0; i < ui->menu_item_count; i++)
-    {
-        lv_obj_t *btn = lv_obj_get_child(menu_cont, i);
-        if (!btn)
-            continue;
-
-        if (i == ui->selected_index)
-        {
-            lv_obj_set_style_bg_color(btn, COLOR_BG_SELECTED, LV_PART_MAIN);
-            lv_obj_set_style_shadow_width(btn, 12, LV_PART_MAIN);
-            lv_obj_set_style_shadow_color(btn, COLOR_BG_SELECTED, LV_PART_MAIN);
-            lv_obj_set_style_shadow_opa(btn, LV_OPA_50, LV_PART_MAIN);
-        }
-        else
-        {
-            lv_obj_set_style_bg_color(btn, COLOR_BG_NORMAL, LV_PART_MAIN);
-            lv_obj_set_style_shadow_width(btn, 8, LV_PART_MAIN);
-            lv_obj_set_style_shadow_color(btn, lv_color_black(), LV_PART_MAIN);
-            lv_obj_set_style_shadow_opa(btn, LV_OPA_30, LV_PART_MAIN);
-        }
+    uint16_t cnt = lv_obj_get_child_cnt(ui->list_menu);
+    for (uint16_t i = 0; i < cnt; i++) {
+        lv_obj_t *btn = lv_obj_get_child(ui->list_menu, i);
+        lv_obj_set_style_bg_color(btn, COLOR_BG_NORMAL, LV_PART_MAIN);
+        lv_obj_clear_state(btn, LV_STATE_CHECKED);
     }
+
+    lv_obj_t *sel = lv_obj_get_child(ui->list_menu, ui->selected_index);
+    if (sel) {
+        lv_obj_set_style_bg_color(sel, COLOR_BG_SELECTED, LV_PART_MAIN);
+        lv_obj_set_style_shadow_width(sel, 12, LV_PART_MAIN);
+        lv_obj_add_state(sel, LV_STATE_CHECKED);
+    }
+
+    lv_obj_scroll_to_view(sel, LV_ANIM_ON);
 }
+
 
 void ui_create_menu(ui_manager_t *ui)
 {
-    /* ---------- MENU - Enhanced với Navigation ---------- */
     ui->scr_menu = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(ui->scr_menu, lv_color_black(), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(ui->scr_menu, lv_color_hex(0x000000), LV_PART_MAIN);
 
-    // Container 
-    lv_obj_t *menu_cont = lv_obj_create(ui->scr_menu);
-    lv_obj_set_size(menu_cont, 128, 160);
-    lv_obj_set_style_bg_opa(menu_cont, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_border_width(menu_cont, 0, LV_PART_MAIN);
-    lv_obj_align(menu_cont, LV_ALIGN_CENTER, 0, 0);
+    ui->list_menu = lv_list_create(ui->scr_menu);
+    lv_obj_set_size(ui->list_menu, 160, 160);
+    lv_obj_align(ui->list_menu, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_get_style_pad_row(ui->list_menu, 20);
 
-    // Enable scrolling 
-    lv_obj_set_scroll_dir(menu_cont, LV_DIR_VER);
-    lv_obj_set_style_pad_ver(menu_cont, 5, LV_PART_MAIN);
-
-    static const char *icons[] = {LV_SYMBOL_GPS, LV_SYMBOL_REFRESH, LV_SYMBOL_DUMMY, LV_SYMBOL_SETTINGS};
-
-    static const char *labels[] = {"GPS", "Body Temp", "HR, SpO2", "Setting"};
-
-    int btn_w = 120, btn_h = 36, padding = 5;
-    for (int i = 0; i < ui->menu_item_count; i++)
-    {
-        lv_obj_t *btn = lv_btn_create(menu_cont);
-        lv_obj_set_size(btn, btn_w, btn_h);
-        lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, i * (btn_h + padding) + 2);
-        lv_obj_set_style_radius(btn, btn_h / 2, LV_PART_MAIN);
-
-        lv_obj_set_style_bg_color(btn, COLOR_BG_NORMAL, LV_PART_MAIN);
-        lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, LV_PART_MAIN);
-        lv_obj_set_style_shadow_width(btn, 8, LV_PART_MAIN);
-        lv_obj_set_style_shadow_color(btn, lv_color_black(), LV_PART_MAIN);
-
-        static lv_style_transition_dsc_t trans;
-        static lv_style_prop_t props[] = {LV_STYLE_BG_COLOR, LV_STYLE_SHADOW_WIDTH, 0};
-        lv_style_transition_dsc_init(&trans, props, lv_anim_path_ease_out, 200, 0, NULL);
-        lv_obj_set_style_transition(btn, &trans, LV_PART_MAIN);
-
-        // Icon
-        lv_obj_t *icon = lv_label_create(btn);
-        lv_label_set_text(icon, icons[i]);
-        lv_obj_set_style_text_color(icon, lv_color_white(), LV_PART_MAIN);
-        lv_obj_set_style_text_font(icon, &lv_font_montserrat_18, LV_PART_MAIN);
-        lv_obj_align(icon, LV_ALIGN_LEFT_MID, 8, 0);
-
-        // Label
-        lv_obj_t *label = lv_label_create(btn);
-        lv_label_set_text(label, labels[i]);
-        lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
-        lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
-        lv_obj_align(label, LV_ALIGN_LEFT_MID, 38, 0);
+    for (int i = 0; i < ui->menu_item_count; i++) {
+        lv_list_add_btn(ui->list_menu, icons[i], labels[i]);
     }
 
-    // Highlight firsst item 
     ui_menu_update_selection(ui);
 }
 
 void ui_manager_init(ui_manager_t *ui)
 {
     memset(ui, 0, sizeof(*ui));
-    ui->menu_item_count = 3;
+    ui->menu_item_count = 6;
     ui->selected_index = 0;
     // Menu items
     ui->menu_items[0] = (menu_item_t){"GPS Tracking", UI_STATE_GPS};
     ui->menu_items[1] = (menu_item_t){"Temperature", UI_STATE_TEMP_IDLE};
     ui->menu_items[2] = (menu_item_t){"Heart Rate", UI_STATE_HR};
+    ui->menu_items[3] = (menu_item_t){"Dashboard", UI_STATE_DATA};
+    ui->menu_items[4] = (menu_item_t){"Wifi", UI_STATE_WIFI};
+    ui->menu_items[5] = (menu_item_t){"Bluetooth", UI_STATE_BLUETOOTH};
 
     // Set dark theme globally
     lv_theme_t *theme = lv_theme_default_init(lv_disp_get_default(),
@@ -134,7 +88,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_clear_flag(img_bg, LV_OBJ_FLAG_CLICKABLE);
 
     lv_obj_t *lbl_datetime = lv_label_create(ui->scr_home);
-    lv_label_set_text(lbl_datetime, "13:00");
+    lv_label_set_text(lbl_datetime, "11:11");
     lv_obj_set_style_text_font(lbl_datetime, &lv_font_montserrat_24, LV_PART_MAIN);
     lv_obj_set_style_text_align(lbl_datetime, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(lbl_datetime, lv_color_white(), LV_PART_MAIN);
@@ -180,7 +134,7 @@ void ui_manager_init(ui_manager_t *ui)
 
     // Title with heart icon
     lv_obj_t *lbl_hr_title = lv_label_create(ui->scr_hr);
-    lv_label_set_text(lbl_hr_title, LV_SYMBOL_AUDIO " HEART RATE");
+    lv_label_set_text(lbl_hr_title, LV_SYMBOL_WARNING " HEART RATE");
     lv_obj_set_style_text_color(lbl_hr_title, lv_color_hex(0xFF1744), LV_PART_MAIN);
     lv_obj_align(lbl_hr_title, LV_ALIGN_TOP_MID, 0, 10);
 
@@ -202,23 +156,6 @@ void ui_manager_init(ui_manager_t *ui)
     lv_label_set_text(ui->lbl_spo2, "SpO2: --%");
     lv_obj_set_style_text_color(ui->lbl_spo2, lv_color_hex(0x00E676), LV_PART_MAIN); // Green
     lv_obj_align(ui->lbl_spo2, LV_ALIGN_CENTER, 0, 5);
-
-    // Animated heart icon
-    ui->img_heart = lv_label_create(hr_container);
-    lv_label_set_text(ui->img_heart, "♥");
-    lv_obj_set_style_text_color(ui->img_heart, lv_color_hex(0xFF1744), LV_PART_MAIN);
-    lv_obj_align(ui->img_heart, LV_ALIGN_CENTER, 35, -15);
-
-    // Heart animation
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, ui->img_heart);
-    lv_anim_set_exec_cb(&a, anim_heart_cb);
-    lv_anim_set_values(&a, LV_OPA_30, LV_OPA_100);
-    lv_anim_set_time(&a, 600);
-    lv_anim_set_playback_time(&a, 400);
-    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_start(&a);
 
     /* ---------- GPS - Tech Style ---------- */
     ui->scr_gps = lv_obj_create(NULL);
@@ -276,7 +213,7 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
             if (ui->selected_index > 0)
             {
                 ui->selected_index--;
-                ui_menu_update_selection(ui); // Thêm dòng này
+                ui_menu_update_selection(ui); 
                 ESP_LOGI("UI_MANAGER", "Menu up: index = %d", ui->selected_index);
             }
         }
@@ -285,7 +222,7 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
             if (ui->selected_index < ui->menu_item_count - 1)
             {
                 ui->selected_index++;
-                ui_menu_update_selection(ui); // Thêm dòng này
+                ui_menu_update_selection(ui); 
                 ESP_LOGI("UI_MANAGER", "Menu down: index = %d", ui->selected_index);
             }
         }
@@ -367,8 +304,8 @@ void ui_switch(ui_manager_t *ui, ui_state_t new_state)
         break;
     case UI_STATE_MENU:
         target = ui->scr_menu;
-        ui->selected_index = 0;       // Reset menu selection
-        ui_menu_update_selection(ui); 
+        ui->selected_index = 0; // Reset menu selection
+        ui_menu_update_selection(ui);
         break;
     case UI_STATE_TEMP_IDLE:
     case UI_STATE_TEMP_SCANNING:
@@ -404,11 +341,13 @@ void ui_switch(ui_manager_t *ui, ui_state_t new_state)
         ESP_LOGI("UI_MANAGER", "Switched to state %d", new_state);
     }
     else
-    {
+    {   
+
         ESP_LOGE("UI_MANAGER", "Failed to switch to state %d - invalid target", new_state);
         // Last resort: try to load home screen without animation
         if (ui->scr_home != NULL)
         {
+            lv_obj_clean(lv_disp_get_scr_act(NULL));
             lv_scr_load(ui->scr_home);
             ui->current_state = UI_STATE_HOME;
         }
