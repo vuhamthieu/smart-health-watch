@@ -5,144 +5,300 @@
 #include "button.h"
 #include "gps_tracker.h"
 #include "health_tracker.h"
+#include <math.h>
 #include "temperature_task.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "The_Artists_Garden_at_Eragny.c"
 
 static const char *TAG = "UI_MANAGER";
 
 // Animation callback cho heart blink
-static void anim_heart_cb(void *obj, int32_t v) {
+static void anim_heart_cb(void *obj, int32_t v)
+{
     lv_obj_set_style_opa(obj, v, LV_PART_MAIN);
+}
+
+void ui_menu_update_selection(ui_manager_t *ui)
+{
+    lv_obj_t *menu_cont = lv_obj_get_child(ui->scr_menu, 0);
+    if (!menu_cont)
+        return;
+
+    for (int i = 0; i < ui->menu_item_count; i++)
+    {
+        lv_obj_t *btn = lv_obj_get_child(menu_cont, i);
+        if (!btn)
+            continue;
+
+        if (i == ui->selected_index)
+        {
+            lv_obj_set_style_bg_color(btn, COLOR_BG_SELECTED, LV_PART_MAIN);
+            lv_obj_set_style_shadow_width(btn, 12, LV_PART_MAIN);
+            lv_obj_set_style_shadow_color(btn, COLOR_BG_SELECTED, LV_PART_MAIN);
+            lv_obj_set_style_shadow_opa(btn, LV_OPA_50, LV_PART_MAIN);
+        }
+        else
+        {
+            lv_obj_set_style_bg_color(btn, COLOR_BG_NORMAL, LV_PART_MAIN);
+            lv_obj_set_style_shadow_width(btn, 8, LV_PART_MAIN);
+            lv_obj_set_style_shadow_color(btn, lv_color_black(), LV_PART_MAIN);
+            lv_obj_set_style_shadow_opa(btn, LV_OPA_30, LV_PART_MAIN);
+        }
+    }
+}
+
+void ui_create_menu(ui_manager_t *ui)
+{
+    /* ---------- MENU - Enhanced với Navigation ---------- */
+    ui->scr_menu = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(ui->scr_menu, lv_color_black(), LV_PART_MAIN);
+
+    // Container 
+    lv_obj_t *menu_cont = lv_obj_create(ui->scr_menu);
+    lv_obj_set_size(menu_cont, 128, 160);
+    lv_obj_set_style_bg_opa(menu_cont, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_border_width(menu_cont, 0, LV_PART_MAIN);
+    lv_obj_align(menu_cont, LV_ALIGN_CENTER, 0, 0);
+
+    // Enable scrolling 
+    lv_obj_set_scroll_dir(menu_cont, LV_DIR_VER);
+    lv_obj_set_style_pad_ver(menu_cont, 5, LV_PART_MAIN);
+
+    static const char *icons[] = {LV_SYMBOL_GPS, LV_SYMBOL_REFRESH, LV_SYMBOL_DUMMY, LV_SYMBOL_SETTINGS};
+
+    static const char *labels[] = {"GPS", "Body Temp", "HR, SpO2", "Setting"};
+
+    int btn_w = 120, btn_h = 36, padding = 5;
+    for (int i = 0; i < ui->menu_item_count; i++)
+    {
+        lv_obj_t *btn = lv_btn_create(menu_cont);
+        lv_obj_set_size(btn, btn_w, btn_h);
+        lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, i * (btn_h + padding) + 2);
+        lv_obj_set_style_radius(btn, btn_h / 2, LV_PART_MAIN);
+
+        lv_obj_set_style_bg_color(btn, COLOR_BG_NORMAL, LV_PART_MAIN);
+        lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, LV_PART_MAIN);
+        lv_obj_set_style_shadow_width(btn, 8, LV_PART_MAIN);
+        lv_obj_set_style_shadow_color(btn, lv_color_black(), LV_PART_MAIN);
+
+        static lv_style_transition_dsc_t trans;
+        static lv_style_prop_t props[] = {LV_STYLE_BG_COLOR, LV_STYLE_SHADOW_WIDTH, 0};
+        lv_style_transition_dsc_init(&trans, props, lv_anim_path_ease_out, 200, 0, NULL);
+        lv_obj_set_style_transition(btn, &trans, LV_PART_MAIN);
+
+        // Icon
+        lv_obj_t *icon = lv_label_create(btn);
+        lv_label_set_text(icon, icons[i]);
+        lv_obj_set_style_text_color(icon, lv_color_white(), LV_PART_MAIN);
+        lv_obj_set_style_text_font(icon, &lv_font_montserrat_18, LV_PART_MAIN);
+        lv_obj_align(icon, LV_ALIGN_LEFT_MID, 8, 0);
+
+        // Label
+        lv_obj_t *label = lv_label_create(btn);
+        lv_label_set_text(label, labels[i]);
+        lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
+        lv_obj_set_style_text_font(label, &lv_font_montserrat_14, LV_PART_MAIN);
+        lv_obj_align(label, LV_ALIGN_LEFT_MID, 38, 0);
+    }
+
+    // Highlight firsst item 
+    ui_menu_update_selection(ui);
 }
 
 void ui_manager_init(ui_manager_t *ui)
 {
     memset(ui, 0, sizeof(*ui));
     ui->menu_item_count = 3;
-    ui->selected_index = 0;  // Initialize selected index
-    ui->menu_items[0] = (menu_item_t){"Foot Tracking",   UI_STATE_GPS};
-    ui->menu_items[1] = (menu_item_t){"Body Temperature",UI_STATE_TEMP_IDLE};
-    ui->menu_items[2] = (menu_item_t){"Heart Rate+SpO2", UI_STATE_HR};
+    ui->selected_index = 0;
+    // Menu items
+    ui->menu_items[0] = (menu_item_t){"GPS Tracking", UI_STATE_GPS};
+    ui->menu_items[1] = (menu_item_t){"Temperature", UI_STATE_TEMP_IDLE};
+    ui->menu_items[2] = (menu_item_t){"Heart Rate", UI_STATE_HR};
 
-    /* ---------- HOME ---------- */
+    // Set dark theme globally
+    lv_theme_t *theme = lv_theme_default_init(lv_disp_get_default(),
+                                              lv_color_white(),       // Primary color
+                                              lv_color_hex(0x333333), // Secondary color
+                                              true,                   // Dark mode
+                                              LV_FONT_DEFAULT);
+    lv_disp_set_theme(lv_disp_get_default(), theme);
+
+    /* ---------- HOME SCREEN - Dark Style ---------- */
     ui->scr_home = lv_obj_create(NULL);
-    lv_obj_t *lbl_home = lv_label_create(ui->scr_home);
-    lv_label_set_text(lbl_home, "Fitness Watch");
-    lv_obj_center(lbl_home);
 
-    /* Status bar - hiển thị trên mọi screen */
-    ui->lbl_date = lv_label_create(ui->scr_home);
-    lv_label_set_text(ui->lbl_date, "2026-01-01");
-    lv_obj_align(ui->lbl_date, LV_ALIGN_TOP_LEFT, 4, 4);
+    lv_obj_t *img_bg = lv_img_create(ui->scr_home);
+    lv_img_set_src(img_bg, &The_Artists_Garden_at_Eragny);
+    lv_obj_align(img_bg, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_size(img_bg, 128, 160);
+    lv_obj_clear_flag(img_bg, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_t *lbl_datetime = lv_label_create(ui->scr_home);
+    lv_label_set_text(lbl_datetime, "13:00");
+    lv_obj_set_style_text_font(lbl_datetime, &lv_font_montserrat_24, LV_PART_MAIN);
+    lv_obj_set_style_text_align(lbl_datetime, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(lbl_datetime, lv_color_white(), LV_PART_MAIN);
+    lv_obj_align(lbl_datetime, LV_ALIGN_CENTER, 0, 0);
 
     ui->lbl_battery = lv_label_create(ui->scr_home);
-    lv_label_set_text_fmt(ui->lbl_battery, LV_SYMBOL_BATTERY_FULL " 100%%");
+    lv_obj_set_style_text_font(ui->lbl_battery, &lv_font_montserrat_14, LV_PART_MAIN);
+    lv_label_set_text(ui->lbl_battery, LV_SYMBOL_BATTERY_FULL);
+    lv_obj_set_style_text_color(ui->lbl_battery, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
     lv_obj_align(ui->lbl_battery, LV_ALIGN_TOP_RIGHT, -4, 4);
 
-    /* ---------- MENU ---------- */
-    ui->scr_menu = lv_obj_create(NULL);
-    ui->list_menu = lv_list_create(ui->scr_menu);
-    for (int i = 0; i < ui->menu_item_count; ++i)
-        lv_list_add_btn(ui->list_menu, LV_SYMBOL_RIGHT, ui->menu_items[i].name);
-    lv_obj_set_size(ui->list_menu, 120, 130);
-    lv_obj_center(ui->list_menu);
+    /* ---------- MENU - Modern Dark Style ---------- */
+    ui_create_menu(ui);
 
-    /* ---------- TEMP ---------- */
+    /* ---------- TEMPERATURE - Professional Dark ---------- */
     ui->scr_temp = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(ui->scr_temp, lv_color_black(), LV_PART_MAIN);
+
+    // Title with icon and color
     lv_obj_t *lbl_temp_title = lv_label_create(ui->scr_temp);
-    lv_label_set_text(lbl_temp_title, "BODY TEMPERATURE");
-    lv_obj_align(lbl_temp_title, LV_ALIGN_TOP_MID, 0, 20);
-    
-    ui->lbl_temp = lv_label_create(ui->scr_temp);
-    lv_label_set_text(ui->lbl_temp, "Press SELECT to scan");
+    lv_label_set_text(lbl_temp_title, "TEMPERATURE");
+    lv_obj_set_style_text_color(lbl_temp_title, lv_color_hex(0xFF6B35), LV_PART_MAIN);
+    lv_obj_align(lbl_temp_title, LV_ALIGN_TOP_MID, 0, 10);
+
+    // Content area with border
+    lv_obj_t *temp_container = lv_obj_create(ui->scr_temp);
+    lv_obj_set_size(temp_container, LV_PCT(85), 80);
+    lv_obj_set_style_bg_color(temp_container, lv_color_hex(0x1a1a1a), LV_PART_MAIN);
+    lv_obj_set_style_border_color(temp_container, lv_color_hex(0xFF6B35), LV_PART_MAIN);
+    lv_obj_set_style_border_width(temp_container, 2, LV_PART_MAIN);
+    lv_obj_set_style_radius(temp_container, 10, LV_PART_MAIN);
+    lv_obj_center(temp_container);
+
+    ui->lbl_temp = lv_label_create(temp_container);
+    lv_label_set_text(ui->lbl_temp, "Press SELECT\nto scan");
+    lv_obj_set_style_text_align(ui->lbl_temp, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(ui->lbl_temp, lv_color_white(), LV_PART_MAIN);
     lv_obj_center(ui->lbl_temp);
 
-    /* ---------- HR ---------- */
+    /* ---------- HEART RATE - Modern Dark ---------- */
     ui->scr_hr = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(ui->scr_hr, lv_color_black(), LV_PART_MAIN);
+
+    // Title with heart icon
     lv_obj_t *lbl_hr_title = lv_label_create(ui->scr_hr);
-    lv_label_set_text(lbl_hr_title, "HEART RATE + SPO2");
-    lv_obj_align(lbl_hr_title, LV_ALIGN_TOP_MID, 0, 20);
+    lv_label_set_text(lbl_hr_title, LV_SYMBOL_AUDIO " HEART RATE");
+    lv_obj_set_style_text_color(lbl_hr_title, lv_color_hex(0xFF1744), LV_PART_MAIN);
+    lv_obj_align(lbl_hr_title, LV_ALIGN_TOP_MID, 0, 10);
 
-    ui->lbl_hr = lv_label_create(ui->scr_hr);
+    // HR display container
+    lv_obj_t *hr_container = lv_obj_create(ui->scr_hr);
+    lv_obj_set_size(hr_container, LV_PCT(85), 90);
+    lv_obj_set_style_bg_color(hr_container, lv_color_hex(0x1a1a1a), LV_PART_MAIN);
+    lv_obj_set_style_border_color(hr_container, lv_color_hex(0xFF1744), LV_PART_MAIN);
+    lv_obj_set_style_border_width(hr_container, 2, LV_PART_MAIN);
+    lv_obj_set_style_radius(hr_container, 10, LV_PART_MAIN);
+    lv_obj_center(hr_container);
+
+    ui->lbl_hr = lv_label_create(hr_container);
     lv_label_set_text(ui->lbl_hr, "HR: -- bpm");
-    lv_obj_align(ui->lbl_hr, LV_ALIGN_CENTER, 0, -10);
+    lv_obj_set_style_text_color(ui->lbl_hr, lv_color_white(), LV_PART_MAIN);
+    lv_obj_align(ui->lbl_hr, LV_ALIGN_CENTER, 0, -15);
 
-    ui->lbl_spo2 = lv_label_create(ui->scr_hr);
+    ui->lbl_spo2 = lv_label_create(hr_container);
     lv_label_set_text(ui->lbl_spo2, "SpO2: --%");
-    lv_obj_align(ui->lbl_spo2, LV_ALIGN_CENTER, 0, +10);
+    lv_obj_set_style_text_color(ui->lbl_spo2, lv_color_hex(0x00E676), LV_PART_MAIN); // Green
+    lv_obj_align(ui->lbl_spo2, LV_ALIGN_CENTER, 0, 5);
 
-    // Heart icon (dùng ký tự thay vì image cho đơn giản)
-    ui->img_heart = lv_label_create(ui->scr_hr);
+    // Animated heart icon
+    ui->img_heart = lv_label_create(hr_container);
     lv_label_set_text(ui->img_heart, "♥");
-    lv_obj_set_style_text_color(ui->img_heart, lv_color_hex(0xFF0000), LV_PART_MAIN);
-    lv_obj_align(ui->img_heart, LV_ALIGN_CENTER, 50, -10);
+    lv_obj_set_style_text_color(ui->img_heart, lv_color_hex(0xFF1744), LV_PART_MAIN);
+    lv_obj_align(ui->img_heart, LV_ALIGN_CENTER, 35, -15);
 
-    // Start heart animation
+    // Heart animation
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, ui->img_heart);
     lv_anim_set_exec_cb(&a, anim_heart_cb);
     lv_anim_set_values(&a, LV_OPA_30, LV_OPA_100);
-    lv_anim_set_time(&a, 500);
-    lv_anim_set_playback_time(&a, 500);
+    lv_anim_set_time(&a, 600);
+    lv_anim_set_playback_time(&a, 400);
     lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
     lv_anim_start(&a);
 
-    /* ---------- GPS ---------- */
+    /* ---------- GPS - Tech Style ---------- */
     ui->scr_gps = lv_obj_create(NULL);
-    lv_obj_t *lbl_gps_title = lv_label_create(ui->scr_gps);
-    lv_label_set_text(lbl_gps_title, "FOOT TRACKING");
-    lv_obj_align(lbl_gps_title, LV_ALIGN_TOP_MID, 0, 20);
+    lv_obj_set_style_bg_color(ui->scr_gps, lv_color_black(), LV_PART_MAIN);
 
-    ui->lbl_gps = lv_label_create(ui->scr_gps);
-    lv_label_set_text(ui->lbl_gps, "No signal");
+    lv_obj_t *lbl_gps_title = lv_label_create(ui->scr_gps);
+    lv_label_set_text(lbl_gps_title, LV_SYMBOL_GPS "GPS TRACKING");
+    lv_obj_set_style_text_color(lbl_gps_title, lv_color_hex(0x4CAF50), LV_PART_MAIN); // Green
+    lv_obj_align(lbl_gps_title, LV_ALIGN_TOP_MID, 0, 10);
+
+    // GPS container
+    lv_obj_t *gps_container = lv_obj_create(ui->scr_gps);
+    lv_obj_set_size(gps_container, LV_PCT(85), 80);
+    lv_obj_set_style_bg_color(gps_container, lv_color_hex(0x1a1a1a), LV_PART_MAIN);
+    lv_obj_set_style_border_color(gps_container, lv_color_hex(0x4CAF50), LV_PART_MAIN);
+    lv_obj_set_style_border_width(gps_container, 2, LV_PART_MAIN);
+    lv_obj_set_style_radius(gps_container, 10, LV_PART_MAIN);
+    lv_obj_center(gps_container);
+
+    ui->lbl_gps = lv_label_create(gps_container);
+    lv_label_set_text(ui->lbl_gps, "Searching...");
+    lv_obj_set_style_text_align(ui->lbl_gps, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(ui->lbl_gps, lv_color_white(), LV_PART_MAIN);
     lv_obj_center(ui->lbl_gps);
 
     /* Load home screen */
     ui->current_state = UI_STATE_HOME;
     lv_scr_load(ui->scr_home);
-    ESP_LOGI(TAG, "LVGL UI Manager initialized");
+    ESP_LOGI(TAG, "Dark Theme UI Manager initialized");
 }
 
 void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
 {
     // Add comprehensive safety check
-    if (ui == NULL) {
+    if (ui == NULL)
+    {
         ESP_LOGE("UI_MANAGER", "UI manager is NULL in button handler");
         return;
     }
-    
+
     ESP_LOGI("UI_MANAGER", "Button %d pressed in state %d", btn, ui->current_state);
-    
+
     switch (ui->current_state)
     {
     case UI_STATE_HOME:
-        if (btn == BUTTON_SELECT) {
+        if (btn == BUTTON_SELECT)
+        {
             ui_switch(ui, UI_STATE_MENU);
         }
         break;
-        
+
     case UI_STATE_MENU:
-        if (btn == BUTTON_UP) {
-            if (ui->selected_index > 0) {
+        if (btn == BUTTON_UP)
+        {
+            if (ui->selected_index > 0)
+            {
                 ui->selected_index--;
+                ui_menu_update_selection(ui); // Thêm dòng này
                 ESP_LOGI("UI_MANAGER", "Menu up: index = %d", ui->selected_index);
             }
         }
-        else if (btn == BUTTON_DOWN) {
-            if (ui->selected_index < ui->menu_item_count - 1) {
+        else if (btn == BUTTON_DOWN)
+        {
+            if (ui->selected_index < ui->menu_item_count - 1)
+            {
                 ui->selected_index++;
+                ui_menu_update_selection(ui); // Thêm dòng này
                 ESP_LOGI("UI_MANAGER", "Menu down: index = %d", ui->selected_index);
             }
         }
-        else if (btn == BUTTON_SELECT) {
-            if (ui->selected_index >= 0 && ui->selected_index < ui->menu_item_count) {
+        else if (btn == BUTTON_SELECT)
+        {
+            if (ui->selected_index >= 0 && ui->selected_index < ui->menu_item_count)
+            {
                 ESP_LOGI("UI_MANAGER", "Menu select: %s", ui->menu_items[ui->selected_index].name);
                 ui_switch(ui, ui->menu_items[ui->selected_index].state);
             }
         }
-        else if (btn == BUTTON_BACK) {
+        else if (btn == BUTTON_BACK)
+        {
             ESP_LOGI("UI_MANAGER", "Back to home from menu");
             ui_switch(ui, UI_STATE_HOME);
         }
@@ -150,21 +306,24 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
 
     case UI_STATE_TEMP_IDLE:
     case UI_STATE_TEMP_RESULT:
-        if (btn == BUTTON_SELECT) {
+        if (btn == BUTTON_SELECT)
+        {
             temperature_init();
             ui->scan_start_time_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
             ui->scan_done = false;
             ui_switch(ui, UI_STATE_TEMP_SCANNING);
             ESP_LOGI(TAG, "Start temperature scanning");
         }
-        else if (btn == BUTTON_BACK) {
+        else if (btn == BUTTON_BACK)
+        {
             ESP_LOGI("UI_MANAGER", "Back to menu from temp");
             ui_switch(ui, UI_STATE_MENU);
         }
         break;
 
     case UI_STATE_TEMP_SCANNING:
-        if (btn == BUTTON_BACK) {
+        if (btn == BUTTON_BACK)
+        {
             ESP_LOGI("UI_MANAGER", "Back to menu from temp scanning");
             ui_switch(ui, UI_STATE_MENU);
         }
@@ -172,13 +331,14 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
 
     case UI_STATE_GPS:
     case UI_STATE_HR:
-        if (btn == BUTTON_BACK) {
-            ESP_LOGI("UI_MANAGER", "Back to menu from %s", 
-                    (ui->current_state == UI_STATE_GPS) ? "GPS" : "HR");
+        if (btn == BUTTON_BACK)
+        {
+            ESP_LOGI("UI_MANAGER", "Back to menu from %s",
+                     (ui->current_state == UI_STATE_GPS) ? "GPS" : "HR");
             ui_switch(ui, UI_STATE_MENU);
         }
         break;
-        
+
     default:
         ESP_LOGW("UI_MANAGER", "Unhandled button %d in state %d", btn, ui->current_state);
         break;
@@ -188,65 +348,72 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
 void ui_switch(ui_manager_t *ui, ui_state_t new_state)
 {
     // Safety check for ui pointer
-    if (ui == NULL) {
+    if (ui == NULL)
+    {
         ESP_LOGE("UI_MANAGER", "UI manager is NULL");
         return;
     }
-        
+
     // Stop any ongoing animations first
     lv_anim_del_all();
-    
+
     ui->current_state = new_state;
     lv_obj_t *target = NULL;
-    
-    switch (new_state) {
-        case UI_STATE_HOME:   
-            target = ui->scr_home; 
-            break;
-        case UI_STATE_MENU:   
-            target = ui->scr_menu; 
-            ui->selected_index = 0; // Reset menu selection
-            break;
-        case UI_STATE_TEMP_IDLE:
-        case UI_STATE_TEMP_SCANNING:
-        case UI_STATE_TEMP_RESULT: 
-            target = ui->scr_temp; 
-            break;
-        case UI_STATE_HR:     
-            target = ui->scr_hr; 
-            break;
-        case UI_STATE_GPS:    
-            target = ui->scr_gps; 
-            break;
-        default:
-            ESP_LOGE("UI_MANAGER", "Unknown UI state: %d", new_state);
-            target = ui->scr_home;
-            ui->current_state = UI_STATE_HOME;
-            break;
+
+    switch (new_state)
+    {
+    case UI_STATE_HOME:
+        target = ui->scr_home;
+        break;
+    case UI_STATE_MENU:
+        target = ui->scr_menu;
+        ui->selected_index = 0;       // Reset menu selection
+        ui_menu_update_selection(ui); 
+        break;
+    case UI_STATE_TEMP_IDLE:
+    case UI_STATE_TEMP_SCANNING:
+    case UI_STATE_TEMP_RESULT:
+        target = ui->scr_temp;
+        break;
+    case UI_STATE_HR:
+        target = ui->scr_hr;
+        break;
+    case UI_STATE_GPS:
+        target = ui->scr_gps;
+        break;
+    default:
+        ESP_LOGE("UI_MANAGER", "Unknown UI state: %d", new_state);
+        target = ui->scr_home;
+        ui->current_state = UI_STATE_HOME;
+        break;
     }
-    
+
     // Enhanced safety checks
-    if (target == NULL) {
+    if (target == NULL)
+    {
         ESP_LOGE("UI_MANAGER", "Target screen is NULL for state %d", new_state);
         // Force fallback to home
         target = ui->scr_home;
         ui->current_state = UI_STATE_HOME;
     }
-    
-    if (target != NULL && lv_obj_is_valid(target)) {
+
+    if (target != NULL && lv_obj_is_valid(target))
+    {
         // Use simple load instead of animation to avoid race conditions
         lv_scr_load(target);
         ESP_LOGI("UI_MANAGER", "Switched to state %d", new_state);
-    } else {
+    }
+    else
+    {
         ESP_LOGE("UI_MANAGER", "Failed to switch to state %d - invalid target", new_state);
         // Last resort: try to load home screen without animation
-        if (ui->scr_home != NULL) {
+        if (ui->scr_home != NULL)
+        {
             lv_scr_load(ui->scr_home);
             ui->current_state = UI_STATE_HOME;
         }
     }
 }
-
 
 void ui_set_date(ui_manager_t *ui, const char *date)
 {
@@ -260,37 +427,81 @@ void ui_set_battery(ui_manager_t *ui, int p)
 
 void ui_update_temp(ui_manager_t *ui, float t)
 {
-    if (ui->current_state < UI_STATE_TEMP_IDLE || ui->current_state > UI_STATE_TEMP_RESULT) return;
-    
-    if (ui->current_state == UI_STATE_TEMP_SCANNING) {
-        lv_label_set_text(ui->lbl_temp, "Measuring...\nPlease wait 10 seconds");
-    } else if (t < -273.0f) {
-        lv_label_set_text(ui->lbl_temp, "Sensor error\nPress SELECT to rescan");
-    } else {
-        lv_label_set_text_fmt(ui->lbl_temp, "Done! Temp: %.2f C\nPress SELECT to rescan", t);
+    if (ui->current_state < UI_STATE_TEMP_IDLE || ui->current_state > UI_STATE_TEMP_RESULT)
+        return;
+
+    if (ui->current_state == UI_STATE_TEMP_SCANNING)
+    {
+        lv_label_set_text(ui->lbl_temp, "Measuring...\nPlease wait 10s");
+        lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xFFEB3B), LV_PART_MAIN); // Yellow
+    }
+    else if (t < -273.0f || isnan(t))
+    {
+        lv_label_set_text(ui->lbl_temp, "Sensor Error\nPress SELECT");
+        lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xFF5722), LV_PART_MAIN); // Red
+    }
+    else
+    {
+        char temp_str[60];
+        snprintf(temp_str, sizeof(temp_str), "🌡️ %.1f°C\n\nPress SELECT\nto rescan", t);
+        lv_label_set_text(ui->lbl_temp, temp_str);
+
+        // Color based on temperature
+        if (t > 37.5)
+        {
+            lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xFF5722), LV_PART_MAIN); // Red - fever
+        }
+        else if (t > 36.0)
+        {
+            lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0x4CAF50), LV_PART_MAIN); // Green - normal
+        }
+        else
+        {
+            lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0x2196F3), LV_PART_MAIN); // Blue - low
+        }
     }
 }
 
 void ui_update_hr(ui_manager_t *ui, int hr, int spo2)
 {
-    if (hr > 0 && spo2 > 0) {
-        lv_label_set_text_fmt(ui->lbl_hr,   "HR: %d bpm", hr);
-        lv_label_set_text_fmt(ui->lbl_spo2, "SpO2: %d%%", spo2);
-    } else {
-        lv_label_set_text(ui->lbl_hr, "Scanning...");
-        lv_label_set_text(ui->lbl_spo2, "");
+    if (hr > 0 && spo2 > 0)
+    {
+        lv_label_set_text_fmt(ui->lbl_hr, "%d BPM", hr);
+        lv_label_set_text_fmt(ui->lbl_spo2, "%d%% SpO2", spo2);
+
+        // Color coding for HR
+        if (hr > 100)
+        {
+            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFF5722), LV_PART_MAIN); // Red - high
+        }
+        else if (hr >= 60)
+        {
+            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0x4CAF50), LV_PART_MAIN); // Green - normal
+        }
+        else
+        {
+            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFFC107), LV_PART_MAIN); // Yellow - low
+        }
+    }
+    else
+    {
+        lv_label_set_text(ui->lbl_hr, LV_SYMBOL_LOOP "Scanning...");
+        lv_label_set_text(ui->lbl_spo2, "Please wait");
+        lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
     }
 }
 
 void ui_update_gps(ui_manager_t *ui, float lat, float lon, bool valid)
 {
-    if (valid) {
-        lv_label_set_text_fmt(ui->lbl_gps, "Lat: %.6f\nLon: %.6f", lat, lon);
-    } else {
-        lv_label_set_text(ui->lbl_gps, "No signal");
+    if (valid)
+    {
+        lv_label_set_text_fmt(ui->lbl_gps, "Lat: %.4f\nLon: %.4f", lat, lon);
+    }
+    else
+    {
+        lv_label_set_text(ui->lbl_gps, "No GPS signal");
     }
 }
-
 
 /*                                                                          SSD1306 UI Manager
 #include "ui_manager.h"

@@ -2,6 +2,11 @@
 #include "lvgl.h"
 #include "button.h"
 
+#define COLOR_BG_NORMAL lv_color_hex(0x857B7B)  
+#define COLOR_BG_SELECTED lv_color_hex(0x4A90E2) 
+#define COLOR_TEXT_NORMAL lv_color_white()
+#define COLOR_TEXT_SELECTED lv_color_white()
+
 typedef enum {
     UI_STATE_HOME,
     UI_STATE_MENU,
@@ -29,7 +34,7 @@ typedef struct {
     lv_obj_t *scr_temp;
     lv_obj_t *scr_hr;
     lv_obj_t *scr_gps;
-
+    
     /* LVGL widget objects */
     lv_obj_t *lbl_battery;
     lv_obj_t *lbl_date;
@@ -39,18 +44,24 @@ typedef struct {
     lv_obj_t *lbl_gps;
     lv_obj_t *img_heart;
     lv_obj_t *list_menu;
-
+    
+    /* Menu management*/
+    lv_obj_t *menu_buttons[10];   
+    int menu_item_count;
+    int selected_index;
+    int visible_start;
+    int max_visible_items;
+    
     /* State management */
     ui_state_t current_state;
-    int selected_index;
-    menu_item_t menu_items[3];
-    int menu_item_count;
+    menu_item_t menu_items[10];      
     ui_info_t info;
     uint32_t scan_start_time_ms;
     bool scan_done;
 } ui_manager_t;
 
 /* API functions */
+void ui_reset_screen_state(ui_manager_t *ui, ui_state_t state);
 void ui_manager_init(ui_manager_t *ui);
 void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn);
 void ui_switch(ui_manager_t *ui, ui_state_t new_state);

@@ -1,6 +1,6 @@
 idf_component_register(
     SRCS "main.c" "ui_manager.c"
-    INCLUDE_DIRS "include" "." 
+    INCLUDE_DIRS "include" "."
     REQUIRES
         max30100
         mlx90614
