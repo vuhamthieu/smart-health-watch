@@ -63,6 +63,7 @@ void ui_create_menu(ui_manager_t *ui)
     ui_menu_update_selection(ui);
 }
 
+
 void ui_manager_init(ui_manager_t *ui)
 {
     memset(ui, 0, sizeof(*ui));
@@ -109,6 +110,11 @@ void ui_manager_init(ui_manager_t *ui)
 
     /* ---------- MENU - Modern Dark Style ---------- */
     ui_create_menu(ui);
+
+    /* ---------- Notifications ---------- */
+
+
+    /* ---------- Dashboard ----------*/
 
     /* ---------- TEMPERATURE - Professional Dark ---------- */
     ui->scr_temp = lv_obj_create(NULL);
@@ -187,6 +193,11 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_align(ui->lbl_gps, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(ui->lbl_gps, lv_color_white(), LV_PART_MAIN);
     lv_obj_center(ui->lbl_gps);
+
+    /* -------- WIFI --------- */
+
+
+    /* -------- BLUETOOTH ---------*/
 
     /* Load home screen */
     ui->current_state = UI_STATE_HOME;

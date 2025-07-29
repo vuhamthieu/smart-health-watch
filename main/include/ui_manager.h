@@ -25,6 +25,9 @@ extern const lv_img_dsc_t bluetooth_icon;
 #define WIFI_ICON  (&wifi_icon)
 #define BLUETOOTH_ICON  (&bluetooth_icon)
 
+// static uint32_t last_interaction_ms = 0;
+// static bool screen_off = false;
+#define TFT_BL_PIN 19
 
 typedef enum {
     UI_STATE_HOME,
