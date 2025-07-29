@@ -77,7 +77,7 @@ void sensor_manager_task(void *pv)
         {
             loggedResult = false;
             temperature_update();
-
+            
             ui_update_temp(&ui, 0);
 
             uint32_t now = xTaskGetTickCount() * portTICK_PERIOD_MS;
@@ -95,7 +95,6 @@ void sensor_manager_task(void *pv)
             if (!loggedResult)
             {
                 float t = temperature_get_data();
-                printf("%.2f\n", t);
 
                 //ESP_LOGI("SENSOR", "-- TEMP_RESULT → %.2f°C", t);
 

@@ -4,7 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-static const char *TAG = "TEMP";
+//static const char *TAG = "TEMP";
 static float       s_temp = -273.15f;
 static float       s_temp_backup = -273.15f;
 static bool        s_valid_temp  = false;
@@ -23,10 +23,11 @@ void temperature_update(void) {
 
         if (t > -273.15f) {
             last_valid = t;
-            ESP_LOGI(TAG, "Temperature: %.2f C", t);
+            //ESP_LOGI(TAG, "Temperature: %.2f C", t);
+            printf("%.2f\n", t);
             break; 
         } else {
-            ESP_LOGW(TAG, "mlx90614_read_temp failed (retry %d)", i + 1);
+            //ESP_LOGW(TAG, "mlx90614_read_temp failed (retry %d)", i + 1);
         }
 
         vTaskDelay(pdMS_TO_TICKS(500)); 
@@ -37,7 +38,7 @@ void temperature_update(void) {
         s_temp_backup = last_valid;
         s_valid_temp = true;
     } else {
-        ESP_LOGE(TAG, "Failed to get valid temperature in this round.");
+        //ESP_LOGE(TAG, "Failed to get valid temperature in this round.");
         s_temp = s_temp_backup;
     }
 }
