@@ -9,13 +9,15 @@
 #include "temperature_task.h"
 #include "gps_tracker.h"
 #include "esp_log.h"
+#include "string.h"
 
 #include "lvgl.h"
 #include "lvgl_helpers.h"
 
-#define TFT_BL_PIN 19
 
 static ui_manager_t ui;
+
+float raw_hr, raw_sp;
 
 // CRITICAL: LVGL tick function
 static void lv_tick_task(void *arg)
@@ -40,7 +42,7 @@ static void gui_task(void *pv)
 
 void sensor_manager_task(void *pv)
 {
-    ESP_LOGI("SENSOR_MANAGER", "Task started");
+    //ESP_LOGI("SENSOR_MANAGER", "Task started");
 
     bool loggedResult = false;
     for (;;)
@@ -59,7 +61,7 @@ void sensor_manager_task(void *pv)
             {
                 ui.scan_done = true;
                 ui.current_state = UI_STATE_TEMP_RESULT;
-                ESP_LOGI("SENSOR", "Scan done → STATE_TEMP_RESULT");
+                //ESP_LOGI("SENSOR", "Scan done → STATE_TEMP_RESULT");
             }
             break;
         }
@@ -69,7 +71,9 @@ void sensor_manager_task(void *pv)
             if (!loggedResult)
             {
                 float t = temperature_get_data();
-                ESP_LOGI("SENSOR", "-- TEMP_RESULT → %.2f°C", t);
+                printf("%.2f\n", t);
+
+                //ESP_LOGI("SENSOR", "-- TEMP_RESULT → %.2f°C", t);
 
                 ui_update_temp(&ui, t);
 
@@ -80,14 +84,26 @@ void sensor_manager_task(void *pv)
 
         case UI_STATE_HR:
         {
-            ESP_LOGI("SENSOR", "-- STATE_HR --");
             health_update();
 
             health_data_t hd;
+
             health_get_data(&hd);
+
+            if (hd.heart_rate != raw_hr || hd.spo2 != raw_sp)
+            {
+                printf("%d,%d\n", hd.heart_rate, hd.spo2);
+                raw_hr = hd.heart_rate;
+                raw_sp = hd.spo2;
+            }
+
             ui_update_hr(&ui, hd.heart_rate, hd.spo2);
 
-            ESP_LOGI("SENSOR", "HR=%d bpm, SpO2=%d%%", hd.heart_rate, hd.spo2);
+            // printf("%d,%d\n", hd.heart_rate, hd.spo2);
+
+            ui_update_hr(&ui, hd.heart_rate, hd.spo2);
+
+            // ESP_LOGI("SENSOR", "HR=%d bpm, SpO2=%d%%", hd.heart_rate, hd.spo2);
             break;
         }
 
