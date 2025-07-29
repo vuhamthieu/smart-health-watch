@@ -15,26 +15,50 @@
 #include "lvgl_helpers.h"
 
 
+static uint32_t last_interaction_ms = 0;
+
+static bool screen_off = false;
+
 static ui_manager_t ui;
 
 float raw_hr, raw_sp;
 
-// CRITICAL: LVGL tick function
+void update_interaction_time() {
+    last_interaction_ms = esp_timer_get_time() / 1000;
+}
+
+void check_screen_timeout(void *pvParameters) {
+    for (;;) {
+        uint32_t current_time_ms = esp_timer_get_time() / 1000;
+        if (!screen_off && (current_time_ms - last_interaction_ms > SCREEN_TIMEOUT_MS)) {
+            gpio_set_level(TFT_BL_PIN, 0); 
+            screen_off = true;
+            ESP_LOGI("SCREEN", "Screen turned off due to inactivity");
+        }
+        vTaskDelay(pdMS_TO_TICKS(1000)); 
+    }
+}
+
+
+// LVGL tick function
 static void lv_tick_task(void *arg)
 {
     (void)arg;
     lv_tick_inc(1); // Increment LVGL tick by 1ms
 }
 
-static void handle_button(button_id_t btn)
-{
+static void handle_button(button_id_t btn) {
+    if (screen_off) {
+        gpio_set_level(TFT_BL_PIN, 1); // Screen on
+        screen_off = false;
+        ESP_LOGI("SCREEN", "Screen turned on due to button press");
+    }
+    update_interaction_time();
     ui_manager_handle_button(&ui, btn);
 }
 
-static void gui_task(void *pv)
-{
-    while (1)
-    {
+static void gui_task(void *pv) {
+    while (1) {
         lv_timer_handler();
         vTaskDelay(pdMS_TO_TICKS(10));
     }
@@ -187,6 +211,7 @@ void app_main(void)
     // Enable backlight
     gpio_set_direction(TFT_BL_PIN, GPIO_MODE_OUTPUT);
     gpio_set_level(TFT_BL_PIN, 1);
+    update_interaction_time(); 
 
     /* ====== UI Initialization ====== */
     ui_manager_init(&ui);
@@ -195,6 +220,7 @@ void app_main(void)
     /* ====== Create Tasks ====== */
     xTaskCreatePinnedToCore(gui_task, "gui", 4096, NULL, 2, NULL, 0); // Pin to Core 0
     xTaskCreate(sensor_manager_task, "sensor", 4096, NULL, 5, NULL);
+    xTaskCreate(check_screen_timeout, "screen_timeout", 2048, NULL, 5, NULL);
 
     ESP_LOGI("MAIN", "System initialized with LVGL");
 }
