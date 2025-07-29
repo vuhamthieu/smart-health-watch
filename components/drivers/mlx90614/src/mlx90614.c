@@ -45,14 +45,14 @@ float mlx90614_read_temp(void)
     //ESP_LOGI(TAG, "PEC calculated: 0x%02X, received: 0x%02X", pec, buf[2]);
     
     if (pec != buf[2]) {
-        ESP_LOGE(TAG, "PEC check failed! Data corrupted.");
+        //ESP_LOGE(TAG, "PEC check failed! Data corrupted.");
         return -273.15f;
     }
 
     uint16_t raw = buf[0] | (buf[1] << 8);
     
     if (raw & MLX90614_ERROR_FLAG) {
-        ESP_LOGW(TAG, "Error flag set in temperature data (raw: 0x%04X)", raw);
+        //ESP_LOGW(TAG, "Error flag set in temperature data (raw: 0x%04X)", raw);
         return -273.15f;
     }
     
