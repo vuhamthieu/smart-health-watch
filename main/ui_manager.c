@@ -102,6 +102,18 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_color(lbl_datetime, lv_color_white(), LV_PART_MAIN);
     lv_obj_align(lbl_datetime, LV_ALIGN_CENTER, 0, 0);
 
+    ui->lbl_wifi = lv_label_create(ui->scr_home);   
+    lv_obj_set_style_text_font(ui->lbl_wifi, &lv_font_montserrat_12, LV_PART_MAIN);
+    lv_label_set_text(ui->lbl_wifi, LV_SYMBOL_WIFI);
+    lv_obj_set_style_text_color(ui->lbl_wifi, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+    lv_obj_align(ui->lbl_wifi, LV_ALIGN_TOP_RIGHT, -40, 4);
+
+    ui->lbl_bluetooth = lv_label_create(ui->scr_home);   
+    lv_obj_set_style_text_font(ui->lbl_bluetooth, &lv_font_montserrat_12, LV_PART_MAIN);
+    lv_label_set_text(ui->lbl_bluetooth, LV_SYMBOL_BLUETOOTH);
+    lv_obj_set_style_text_color(ui->lbl_bluetooth, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+    lv_obj_align(ui->lbl_bluetooth, LV_ALIGN_TOP_RIGHT, -25, 4);
+
     ui->lbl_battery = lv_label_create(ui->scr_home);
     lv_obj_set_style_text_font(ui->lbl_battery, &lv_font_montserrat_14, LV_PART_MAIN);
     lv_label_set_text(ui->lbl_battery, LV_SYMBOL_BATTERY_FULL);
@@ -112,9 +124,10 @@ void ui_manager_init(ui_manager_t *ui)
     ui_create_menu(ui);
 
     /* ---------- Notifications ---------- */
-
+    ui->scr_notify= lv_obj_create(NULL);
 
     /* ---------- Dashboard ----------*/
+    ui->scr_data = lv_obj_create(NULL);
 
     /* ---------- TEMPERATURE - Professional Dark ---------- */
     ui->scr_temp = lv_obj_create(NULL);
@@ -147,7 +160,7 @@ void ui_manager_init(ui_manager_t *ui)
 
     // Title with heart icon
     lv_obj_t *lbl_hr_title = lv_label_create(ui->scr_hr);
-    lv_label_set_text(lbl_hr_title, LV_SYMBOL_WARNING " HEART RATE");
+    lv_label_set_text(lbl_hr_title, "HEART RATE");
     lv_obj_set_style_text_color(lbl_hr_title, lv_color_hex(0xFF1744), LV_PART_MAIN);
     lv_obj_align(lbl_hr_title, LV_ALIGN_TOP_MID, 0, 10);
 
@@ -195,9 +208,11 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_center(ui->lbl_gps);
 
     /* -------- WIFI --------- */
+    ui->scr_wifi = lv_obj_create(NULL);
 
 
     /* -------- BLUETOOTH ---------*/
+    ui->scr_bluetooth = lv_obj_create(NULL);
 
     /* Load home screen */
     ui->current_state = UI_STATE_HOME;

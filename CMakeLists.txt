@@ -11,6 +11,7 @@ set(EXTRA_COMPONENT_DIRS
     components/drivers/neo6m
     components/utils/button
     components/utils/i2c
+    components/utils/wifi
     components/libs/u8g2
     components/libs/max30100
     tasks/gps

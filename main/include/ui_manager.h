@@ -60,10 +60,16 @@ typedef struct {
     lv_obj_t *scr_temp;
     lv_obj_t *scr_hr;
     lv_obj_t *scr_gps;
+    lv_obj_t *scr_wifi;
+    lv_obj_t *scr_bluetooth;
+    lv_obj_t *scr_notify;
+    lv_obj_t *scr_data;
 
     /* Common widgets */
     lv_obj_t *lbl_battery;
     lv_obj_t *lbl_date;
+    lv_obj_t *lbl_wifi;
+    lv_obj_t *lbl_bluetooth;
 
     /* Home */
     lv_obj_t *img_bg;
