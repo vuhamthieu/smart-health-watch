@@ -10,10 +10,11 @@
 #include "gps_tracker.h"
 #include "esp_log.h"
 #include "string.h"
+#include "wifi.h"
+#include "nvs_flash.h"
 
 #include "lvgl.h"
 #include "lvgl_helpers.h"
-
 
 static uint32_t last_interaction_ms = 0;
 
@@ -23,22 +24,25 @@ static ui_manager_t ui;
 
 float raw_hr, raw_sp;
 
-void update_interaction_time() {
+void update_interaction_time()
+{
     last_interaction_ms = esp_timer_get_time() / 1000;
 }
 
-void check_screen_timeout(void *pvParameters) {
-    for (;;) {
+void check_screen_timeout(void *pvParameters)
+{
+    for (;;)
+    {
         uint32_t current_time_ms = esp_timer_get_time() / 1000;
-        if (!screen_off && (current_time_ms - last_interaction_ms > SCREEN_TIMEOUT_MS)) {
-            gpio_set_level(TFT_BL_PIN, 0); 
+        if (!screen_off && (current_time_ms - last_interaction_ms > SCREEN_TIMEOUT_MS))
+        {
+            gpio_set_level(TFT_BL_PIN, 0);
             screen_off = true;
             ESP_LOGI("SCREEN", "Screen turned off due to inactivity");
         }
-        vTaskDelay(pdMS_TO_TICKS(1000)); 
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
-
 
 // LVGL tick function
 static void lv_tick_task(void *arg)
@@ -47,8 +51,10 @@ static void lv_tick_task(void *arg)
     lv_tick_inc(1); // Increment LVGL tick by 1ms
 }
 
-static void handle_button(button_id_t btn) {
-    if (screen_off) {
+static void handle_button(button_id_t btn)
+{
+    if (screen_off)
+    {
         gpio_set_level(TFT_BL_PIN, 1); // Screen on
         screen_off = false;
         ESP_LOGI("SCREEN", "Screen turned on due to button press");
@@ -57,8 +63,10 @@ static void handle_button(button_id_t btn) {
     ui_manager_handle_button(&ui, btn);
 }
 
-static void gui_task(void *pv) {
-    while (1) {
+static void gui_task(void *pv)
+{
+    while (1)
+    {
         lv_timer_handler();
         vTaskDelay(pdMS_TO_TICKS(10));
     }
@@ -66,7 +74,7 @@ static void gui_task(void *pv) {
 
 void sensor_manager_task(void *pv)
 {
-    //ESP_LOGI("SENSOR_MANAGER", "Task started");
+    // ESP_LOGI("SENSOR_MANAGER", "Task started");
 
     bool loggedResult = false;
     for (;;)
@@ -77,7 +85,7 @@ void sensor_manager_task(void *pv)
         {
             loggedResult = false;
             temperature_update();
-            
+
             ui_update_temp(&ui, 0);
 
             uint32_t now = xTaskGetTickCount() * portTICK_PERIOD_MS;
@@ -85,7 +93,7 @@ void sensor_manager_task(void *pv)
             {
                 ui.scan_done = true;
                 ui.current_state = UI_STATE_TEMP_RESULT;
-                //ESP_LOGI("SENSOR", "Scan done → STATE_TEMP_RESULT");
+                // ESP_LOGI("SENSOR", "Scan done → STATE_TEMP_RESULT");
             }
             break;
         }
@@ -96,7 +104,7 @@ void sensor_manager_task(void *pv)
             {
                 float t = temperature_get_data();
 
-                //ESP_LOGI("SENSOR", "-- TEMP_RESULT → %.2f°C", t);
+                // ESP_LOGI("SENSOR", "-- TEMP_RESULT → %.2f°C", t);
 
                 ui_update_temp(&ui, t);
 
@@ -176,6 +184,26 @@ void app_main(void)
         }
     }
 
+    // esp_err_t ret = nvs_flash_init();
+    // if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    // {
+    //     ESP_ERROR_CHECK(nvs_flash_erase());
+    //     ret = nvs_flash_init();
+    // }
+    // ESP_ERROR_CHECK(ret);
+
+    // const char *ssid = "Samsung Galaxy S8";
+    // const char *pass = "88888888";
+    // esp_err_t wifi_ok = wifi_init(ssid, pass);
+    // if (wifi_ok != ESP_OK)
+    // {
+    //     ESP_LOGE("MAIN", "WiFi init failed!");
+    // }
+    // else
+    // {
+    //     ESP_LOGI("MAIN", "WiFi connected. IP ready for web requests.");
+    // }
+
     vTaskDelay(pdMS_TO_TICKS(1000));
     gps_init();
     temperature_init();
@@ -210,7 +238,7 @@ void app_main(void)
     // Enable backlight
     gpio_set_direction(TFT_BL_PIN, GPIO_MODE_OUTPUT);
     gpio_set_level(TFT_BL_PIN, 1);
-    update_interaction_time(); 
+    update_interaction_time();
 
     /* ====== UI Initialization ====== */
     ui_manager_init(&ui);
