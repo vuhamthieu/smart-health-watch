@@ -22,9 +22,6 @@ extern const lv_img_dsc_t bluetooth_icon;
 #define HEART_ICON  (&heart_icon)
 #define DATA_ICON  (&data_icon)
 #define NOTIFY_ICON  (&notify_icon)
-#define WIFI_ICON  (&wifi_icon)
-#define BLUETOOTH_ICON  (&bluetooth_icon)
-
 
 #define SCREEN_TIMEOUT_MS 20000
 #define TFT_BL_PIN 19
@@ -70,6 +67,9 @@ typedef struct {
     lv_obj_t *lbl_date;
     lv_obj_t *lbl_wifi;
     lv_obj_t *lbl_bluetooth;
+
+    /* Status for wifi and bluetooth*/
+    lv_obj_t *lbl_wifi_status;
 
     /* Home */
     lv_obj_t *img_bg;
@@ -118,6 +118,10 @@ void ui_update_temp(ui_manager_t *ui, float t);
 void ui_update_hr(ui_manager_t *ui, int hr, int spo2);
 
 void ui_update_gps(ui_manager_t *ui, float lat, float lon, bool valid);
+
+void ui_update_wifi_status(ui_manager_t *ui);
+
+void ui_update_home_wifi_icon(ui_manager_t *ui);
 
 
 

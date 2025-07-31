@@ -12,6 +12,7 @@
 #include "string.h"
 #include "wifi.h"
 #include "nvs_flash.h"
+#include "http_client.h"
 
 #include "lvgl.h"
 #include "lvgl_helpers.h"
@@ -41,6 +42,16 @@ void check_screen_timeout(void *pvParameters)
             ESP_LOGI("SCREEN", "Screen turned off due to inactivity");
         }
         vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+void wifi_status_task(void *pv)
+{
+    for (;;)
+    {
+        ui_update_wifi_status(&ui);    
+        ui_update_home_wifi_icon(&ui);   
+        vTaskDelay(pdMS_TO_TICKS(1000)); 
     }
 }
 
@@ -77,6 +88,7 @@ void sensor_manager_task(void *pv)
     // ESP_LOGI("SENSOR_MANAGER", "Task started");
 
     bool loggedResult = false;
+    
     for (;;)
     {
         switch (ui.current_state)
@@ -107,6 +119,7 @@ void sensor_manager_task(void *pv)
                 // ESP_LOGI("SENSOR", "-- TEMP_RESULT → %.2f°C", t);
 
                 ui_update_temp(&ui, t);
+                http_client_send_temp(t);
 
                 loggedResult = true;
             }
@@ -133,6 +146,8 @@ void sensor_manager_task(void *pv)
             // printf("%d,%d\n", hd.heart_rate, hd.spo2);
 
             ui_update_hr(&ui, hd.heart_rate, hd.spo2);
+            
+            http_client_send_hr_spo2(hd.heart_rate, hd.spo2);
 
             // ESP_LOGI("SENSOR", "HR=%d bpm, SpO2=%d%%", hd.heart_rate, hd.spo2);
             break;
@@ -154,11 +169,16 @@ void sensor_manager_task(void *pv)
             {
                 ESP_LOGI("SENSOR", "GPS no signal");
             }
+            http_client_send_gps(gps.latitude, gps.longitude);
             break;
         }
 
         case UI_STATE_HOME:
         case UI_STATE_MENU:
+        case UI_STATE_WIFI:
+        case UI_STATE_NOTIFY: 
+        case UI_STATE_DATA:   
+        case UI_STATE_BLUETOOTH:
         case UI_STATE_TEMP_IDLE:
             break;
 
@@ -184,30 +204,33 @@ void app_main(void)
         }
     }
 
-    // esp_err_t ret = nvs_flash_init();
-    // if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-    // {
-    //     ESP_ERROR_CHECK(nvs_flash_erase());
-    //     ret = nvs_flash_init();
-    // }
-    // ESP_ERROR_CHECK(ret);
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
 
-    // const char *ssid = "Samsung Galaxy S8";
-    // const char *pass = "88888888";
-    // esp_err_t wifi_ok = wifi_init(ssid, pass);
-    // if (wifi_ok != ESP_OK)
-    // {
-    //     ESP_LOGE("MAIN", "WiFi init failed!");
-    // }
-    // else
-    // {
-    //     ESP_LOGI("MAIN", "WiFi connected. IP ready for web requests.");
-    // }
+    const char *ssid = "Samsung Galaxy S8";
+    const char *pass = "88888888";
+    esp_err_t wifi_ok = wifi_init(ssid, pass);
+    if (wifi_ok != ESP_OK)
+    {
+        ESP_LOGE("MAIN", "WiFi init failed: %s", esp_err_to_name(wifi_ok));
+    }
+    else
+    {
+        ESP_LOGI("MAIN", "WiFi initialized, waiting for user to start.");
+    }
+
+    
 
     vTaskDelay(pdMS_TO_TICKS(1000));
     gps_init();
     temperature_init();
     health_init();
+    http_client_init();
 
     /* ====== LVGL Initialization ====== */
     lv_init();
@@ -245,9 +268,10 @@ void app_main(void)
     button_init(handle_button);
 
     /* ====== Create Tasks ====== */
-    xTaskCreatePinnedToCore(gui_task, "gui", 4096, NULL, 2, NULL, 0); // Pin to Core 0
+    xTaskCreatePinnedToCore(gui_task, "gui", 8192, NULL, 2, NULL, 0); // Pin to Core 0
     xTaskCreate(sensor_manager_task, "sensor", 4096, NULL, 5, NULL);
     xTaskCreate(check_screen_timeout, "screen_timeout", 2048, NULL, 5, NULL);
+    xTaskCreate(wifi_status_task, "wifi_status", 2048, NULL, 5, NULL);
 
     ESP_LOGI("MAIN", "System initialized with LVGL");
 }

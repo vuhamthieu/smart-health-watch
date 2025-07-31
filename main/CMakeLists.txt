@@ -15,6 +15,7 @@ idf_component_register(
         lvgl_esp32_drivers
         lvgl__lvgl
         wifi
+        http
     PRIV_REQUIRES freertos esp_common driver esp_lcd
     EMBED_FILES "partitions.csv"    
 )

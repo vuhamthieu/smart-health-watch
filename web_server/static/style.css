@@ -1,0 +1,60 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+}
+
+.data-box {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 10px;
+    padding: 20px;
+    display: inline-block;
+    width: 200px;
+}
+
+.data-box h2 {
+    font-size: 1.2em;
+    color: #2196F3;
+    margin: 0 0 10px 0;
+}
+
+.data-box p {
+    font-size: 1.5em;
+    color: #333;
+    margin: 0;
+}
+
+.valid-status {
+    font-size: 0.9em;
+    color: #4CAF50;
+    margin-top: 5px;
+}
+
+.valid-status.invalid {
+    color: #FF5722;
+}
+
+#heart_rate {
+    color: #FF5722;
+}
+
+#spo2 {
+    color: rgb(34, 189, 34);
+}
+
+#temperature {
+    color: rgb(202, 136, 61);
+}

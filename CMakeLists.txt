@@ -12,6 +12,7 @@ set(EXTRA_COMPONENT_DIRS
     components/utils/button
     components/utils/i2c
     components/utils/wifi
+    components/utils/http
     components/libs/u8g2
     components/libs/max30100
     tasks/gps

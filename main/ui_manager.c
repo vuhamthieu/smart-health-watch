@@ -14,29 +14,35 @@
 #include "temp_icon.c"
 #include "heart_icon.c"
 #include "data_icon.c"
-#include "wifi_icon.c"
-#include "bluetooth_icon.c"
 #include "notify_icon.c"
+#include "wifi.h"
 
 static const char *TAG = "UI_MANAGER";
 
-static const void *icons[] = {NOTIFY_ICON, GPS_ICON, TEMP_ICON, HEART_ICON, DATA_ICON, WIFI_ICON, BLUETOOTH_ICON};
+static TickType_t last_button_time = 0;
+
+#define BUTTON_COOLDOWN_MS 200
+
+static const void *icons[] = {NOTIFY_ICON, GPS_ICON, TEMP_ICON, HEART_ICON, DATA_ICON, LV_SYMBOL_WIFI, LV_SYMBOL_BLUETOOTH};
 
 static const char *labels[] = {"Notifications", "GPS", "Body Temp", "Heart rate", "Dashboard", "Wifi", "Bluetooth"};
 
 void ui_menu_update_selection(ui_manager_t *ui)
 {
-    if (!ui->list_menu) return;
+    if (!ui->list_menu)
+        return;
 
     uint16_t cnt = lv_obj_get_child_cnt(ui->list_menu);
-    for (uint16_t i = 0; i < cnt; i++) {
+    for (uint16_t i = 0; i < cnt; i++)
+    {
         lv_obj_t *btn = lv_obj_get_child(ui->list_menu, i);
         lv_obj_set_style_bg_color(btn, COLOR_BG_NORMAL, LV_PART_MAIN);
         lv_obj_clear_state(btn, LV_STATE_CHECKED);
     }
 
     lv_obj_t *sel = lv_obj_get_child(ui->list_menu, ui->selected_index);
-    if (sel) {
+    if (sel)
+    {
         lv_obj_set_style_bg_color(sel, COLOR_BG_SELECTED, LV_PART_MAIN);
         lv_obj_set_style_shadow_width(sel, 12, LV_PART_MAIN);
         lv_obj_add_state(sel, LV_STATE_CHECKED);
@@ -44,7 +50,6 @@ void ui_menu_update_selection(ui_manager_t *ui)
 
     lv_obj_scroll_to_view(sel, LV_ANIM_ON);
 }
-
 
 void ui_create_menu(ui_manager_t *ui)
 {
@@ -56,13 +61,55 @@ void ui_create_menu(ui_manager_t *ui)
     lv_obj_align(ui->list_menu, LV_ALIGN_CENTER, 0, 0);
     lv_obj_get_style_pad_row(ui->list_menu, 20);
 
-    for (int i = 0; i < ui->menu_item_count; i++) {
+    for (int i = 0; i < ui->menu_item_count; i++)
+    {
         lv_list_add_btn(ui->list_menu, icons[i], labels[i]);
     }
 
     ui_menu_update_selection(ui);
 }
 
+void ui_update_wifi_status(ui_manager_t *ui)
+{
+    if (ui->lbl_wifi_status)
+    {
+        if (is_wifi_connecting())
+        {
+            lv_label_set_text(ui->lbl_wifi_status, "WIFI: Turning on");
+            lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
+        }
+        else
+        {
+            lv_label_set_text(ui->lbl_wifi_status, is_wifi_connected() ? "WiFi: ON" : "WiFi: OFF");
+            lv_obj_set_style_text_color(ui->lbl_wifi_status,
+                                        is_wifi_connected() ? lv_color_hex(0x4CAF50) : lv_color_hex(0xFF5722),
+                                        LV_PART_MAIN);
+        }
+    }
+}
+
+void ui_update_home_wifi_icon(ui_manager_t *ui)
+{
+    if (is_wifi_connected())
+    {
+        if (!ui->lbl_wifi)
+        {
+            ui->lbl_wifi = lv_label_create(ui->scr_home);
+            lv_obj_set_style_text_font(ui->lbl_wifi, &lv_font_montserrat_12, LV_PART_MAIN);
+            lv_label_set_text(ui->lbl_wifi, LV_SYMBOL_WIFI);
+            lv_obj_set_style_text_color(ui->lbl_wifi, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+            lv_obj_align(ui->lbl_wifi, LV_ALIGN_TOP_RIGHT, -40, 4);
+        }
+    }
+    else
+    {
+        if (ui->lbl_wifi)
+        {
+            lv_obj_del(ui->lbl_wifi);
+            ui->lbl_wifi = NULL;
+        }
+    }
+}
 
 void ui_manager_init(ui_manager_t *ui)
 {
@@ -102,18 +149,6 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_color(lbl_datetime, lv_color_white(), LV_PART_MAIN);
     lv_obj_align(lbl_datetime, LV_ALIGN_CENTER, 0, 0);
 
-    ui->lbl_wifi = lv_label_create(ui->scr_home);   
-    lv_obj_set_style_text_font(ui->lbl_wifi, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_label_set_text(ui->lbl_wifi, LV_SYMBOL_WIFI);
-    lv_obj_set_style_text_color(ui->lbl_wifi, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_align(ui->lbl_wifi, LV_ALIGN_TOP_RIGHT, -40, 4);
-
-    ui->lbl_bluetooth = lv_label_create(ui->scr_home);   
-    lv_obj_set_style_text_font(ui->lbl_bluetooth, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_label_set_text(ui->lbl_bluetooth, LV_SYMBOL_BLUETOOTH);
-    lv_obj_set_style_text_color(ui->lbl_bluetooth, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_align(ui->lbl_bluetooth, LV_ALIGN_TOP_RIGHT, -25, 4);
-
     ui->lbl_battery = lv_label_create(ui->scr_home);
     lv_obj_set_style_text_font(ui->lbl_battery, &lv_font_montserrat_14, LV_PART_MAIN);
     lv_label_set_text(ui->lbl_battery, LV_SYMBOL_BATTERY_FULL);
@@ -124,7 +159,7 @@ void ui_manager_init(ui_manager_t *ui)
     ui_create_menu(ui);
 
     /* ---------- Notifications ---------- */
-    ui->scr_notify= lv_obj_create(NULL);
+    ui->scr_notify = lv_obj_create(NULL);
 
     /* ---------- Dashboard ----------*/
     ui->scr_data = lv_obj_create(NULL);
@@ -209,7 +244,30 @@ void ui_manager_init(ui_manager_t *ui)
 
     /* -------- WIFI --------- */
     ui->scr_wifi = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(ui->scr_wifi, lv_color_black(), LV_PART_MAIN);
 
+    // TITLE
+    lv_obj_t *lbl_wifi_title = lv_label_create(ui->scr_wifi);
+    lv_label_set_text(lbl_wifi_title, "WIFI SETTINGS");
+    lv_obj_set_style_text_color(lbl_wifi_title, lv_color_hex(0x2196F3), LV_PART_MAIN); // Blue
+    lv_obj_align(lbl_wifi_title, LV_ALIGN_TOP_MID, 0, 10);
+
+    // Container WiFi status
+    lv_obj_t *wifi_container = lv_obj_create(ui->scr_wifi);
+    lv_obj_set_size(wifi_container, LV_PCT(85), 80);
+    lv_obj_set_style_bg_color(wifi_container, lv_color_hex(0x1a1a1a), LV_PART_MAIN);
+    lv_obj_set_style_border_color(wifi_container, lv_color_hex(0x2196F3), LV_PART_MAIN);
+    lv_obj_set_style_border_width(wifi_container, 2, LV_PART_MAIN);
+    lv_obj_set_style_radius(wifi_container, 10, LV_PART_MAIN);
+    lv_obj_center(wifi_container);
+
+    ui->lbl_wifi_status = lv_label_create(wifi_container);
+    lv_label_set_text(ui->lbl_wifi_status, is_wifi_connected() ? "WiFi: ON" : "WiFi: OFF");
+    lv_obj_set_style_text_align(ui->lbl_wifi_status, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(ui->lbl_wifi_status,
+                                is_wifi_connected() ? lv_color_hex(0x4CAF50) : lv_color_hex(0xFF5722),
+                                LV_PART_MAIN);
+    lv_obj_center(ui->lbl_wifi_status);
 
     /* -------- BLUETOOTH ---------*/
     ui->scr_bluetooth = lv_obj_create(NULL);
@@ -231,11 +289,70 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
 
     ESP_LOGI("UI_MANAGER", "Button %d pressed in state %d", btn, ui->current_state);
 
+    TickType_t current_time = xTaskGetTickCount();
+    if ((current_time - last_button_time) * portTICK_PERIOD_MS < BUTTON_COOLDOWN_MS) {
+        ESP_LOGW(TAG, "Button event ignored due to cooldown");
+        return;
+    }
+    last_button_time = current_time;
+
+    // Add comprehensive safety check
+    if (ui == NULL)
+    {
+        ESP_LOGE(TAG, "UI manager is NULL in button handler");
+        return;
+    }
+
+    ESP_LOGI(TAG, "Button %d pressed in state %d", btn, ui->current_state);
+
     switch (ui->current_state)
     {
     case UI_STATE_HOME:
         if (btn == BUTTON_SELECT)
         {
+            ui_switch(ui, UI_STATE_MENU);
+        }
+        break;
+
+    case UI_STATE_WIFI:
+        if (btn == BUTTON_SELECT)
+        {
+            if (is_wifi_connected() || is_wifi_connecting())
+            {
+                ESP_LOGI("UI_MANAGER", "Turning WiFi OFF");
+                esp_err_t ret = wifi_stop();
+                if (ret != ESP_OK)
+                {
+                    ESP_LOGE("UI_MANAGER", "Failed to stop WiFi: %s", esp_err_to_name(ret));
+                    lv_label_set_text(ui->lbl_wifi_status, "WiFi: Error");
+                    lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFF5722), LV_PART_MAIN);
+                }
+                else
+                {
+                    ui_update_wifi_status(ui);
+                    ui_update_home_wifi_icon(ui);
+                }
+            }
+            else
+            {
+                ESP_LOGI("UI_MANAGER", "Turning WiFi ON");
+                esp_err_t ret = wifi_start();
+                if (ret != ESP_OK)
+                {
+                    ESP_LOGE("UI_MANAGER", "Failed to start WiFi: %s", esp_err_to_name(ret));
+                    lv_label_set_text(ui->lbl_wifi_status, "WiFi: Error");
+                    lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFF5722), LV_PART_MAIN);
+                }
+                else
+                {
+                    ui_update_wifi_status(ui);
+                    ui_update_home_wifi_icon(ui);
+                }
+            }
+        }
+        else if (btn == BUTTON_BACK)
+        {
+            ESP_LOGI("UI_MANAGER", "Back to menu from WiFi");
             ui_switch(ui, UI_STATE_MENU);
         }
         break;
@@ -246,7 +363,7 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
             if (ui->selected_index > 0)
             {
                 ui->selected_index--;
-                ui_menu_update_selection(ui); 
+                ui_menu_update_selection(ui);
                 ESP_LOGI("UI_MANAGER", "Menu up: index = %d", ui->selected_index);
             }
         }
@@ -255,7 +372,7 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
             if (ui->selected_index < ui->menu_item_count - 1)
             {
                 ui->selected_index++;
-                ui_menu_update_selection(ui); 
+                ui_menu_update_selection(ui);
                 ESP_LOGI("UI_MANAGER", "Menu down: index = %d", ui->selected_index);
             }
         }
@@ -335,10 +452,14 @@ void ui_switch(ui_manager_t *ui, ui_state_t new_state)
     case UI_STATE_HOME:
         target = ui->scr_home;
         break;
+
     case UI_STATE_MENU:
         target = ui->scr_menu;
         ui->selected_index = 0; // Reset menu selection
         ui_menu_update_selection(ui);
+        break;
+    case UI_STATE_WIFI:
+        target = ui->scr_wifi;
         break;
     case UI_STATE_TEMP_IDLE:
     case UI_STATE_TEMP_SCANNING:
@@ -374,7 +495,7 @@ void ui_switch(ui_manager_t *ui, ui_state_t new_state)
         ESP_LOGI("UI_MANAGER", "Switched to state %d", new_state);
     }
     else
-    {   
+    {
 
         ESP_LOGE("UI_MANAGER", "Failed to switch to state %d - invalid target", new_state);
         // Last resort: try to load home screen without animation
