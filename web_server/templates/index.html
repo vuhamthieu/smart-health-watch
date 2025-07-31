@@ -3,9 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Health Monitor Dashboard</title>
+    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-        
+    <div class="container">
+        <h1>Health Monitor Dashboard</h1>
+        <div class="data-box">
+            <h2 style = "color: red">Heart Rate</h2>
+            <p id="heart_rate">-- bpm</p>
+        </div>
+        <div class="data-box">
+            <h2 style = "color: green">SpO2</h2>
+            <p id="spo2">-- %</p>
+        </div>
+        <div class="data-box">
+            <h2 style = "color: orange">Temperature</h2>
+            <p id="temperature">-- °C</p>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
 </body>
 </html>
