@@ -9,5 +9,6 @@ esp_err_t wifi_stop(void);
 esp_err_t wifi_start(void);
 bool is_wifi_connected(void);
 bool is_wifi_connecting(void);
+bool is_wifi_connect_failed(void);
 
 #endif

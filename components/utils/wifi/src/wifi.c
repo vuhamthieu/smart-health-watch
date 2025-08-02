@@ -21,11 +21,20 @@ bool isWifiConnected = false;
 bool isWifiConnecting = false;
 static char saved_ssid[33] = {0};
 static char saved_password[65] = {0}; 
+static bool wifi_connect_failed = false;
+
+
+bool is_wifi_connect_failed(void) {
+    return wifi_connect_failed;
+}
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+            s_retry_num = 0;                // <-- THÊM DÒNG NÀY
+        wifi_connect_failed = false; 
         esp_wifi_connect();
         isWifiConnecting = true;
+        wifi_connect_failed = false; 
         ESP_LOGI(TAG, "WiFi STA started, connecting... isWifiConnected=%d, isWifiConnecting=%d", isWifiConnected, isWifiConnecting);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         isWifiConnected = false;
@@ -38,6 +47,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
             ESP_LOGI(TAG, "Retrying to connect to the AP, attempt %d/%d", s_retry_num, MAXIMUM_RETRY);
         } else {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+            wifi_connect_failed = true; 
             ESP_LOGI(TAG, "Failed to connect to AP after %d attempts", MAXIMUM_RETRY);
         }
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
@@ -46,11 +56,13 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
         s_retry_num = 0;
         isWifiConnected = true;
         isWifiConnecting = false;
+        wifi_connect_failed = false;
         ESP_LOGI(TAG, "WiFi connected, isWifiConnected=%d, isWifiConnecting=%d", isWifiConnected, isWifiConnecting);
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_STOP) {
         isWifiConnected = false;
         isWifiConnecting = false;
+        wifi_connect_failed = false; 
         ESP_LOGI(TAG, "WiFi STA stopped, isWifiConnected=%d, isWifiConnecting=%d", isWifiConnected, isWifiConnecting);
     }
 }
@@ -98,6 +110,10 @@ esp_err_t wifi_disconnect(void) {
 esp_err_t wifi_stop(void) {
     isWifiConnected = false;
     isWifiConnecting = false;
+    
+    s_retry_num = 0;                   
+    wifi_connect_failed = false;        
+    
     ESP_LOGI(TAG, "Stopping WiFi...");
     esp_err_t ret = esp_wifi_stop();
     if (ret != ESP_OK) {
@@ -106,9 +122,14 @@ esp_err_t wifi_stop(void) {
     return ret;
 }
 
+
 esp_err_t wifi_start(void) {
     ESP_LOGI(TAG, "Starting WiFi...");
+    
+    s_retry_num = 0;                   
+    wifi_connect_failed = false;      
     isWifiConnecting = true;
+    
     esp_err_t ret = esp_wifi_start();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to start WiFi: %s", esp_err_to_name(ret));
@@ -122,6 +143,7 @@ esp_err_t wifi_start(void) {
     }
     return ret;
 }
+
 
 bool is_wifi_connected(void) {
     return isWifiConnected;

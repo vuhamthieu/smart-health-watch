@@ -70,6 +70,7 @@ typedef struct {
 
     /* Status for wifi and bluetooth*/
     lv_obj_t *lbl_wifi_status;
+    lv_obj_t *lbl_bluetooth_status;
 
     /* Home */
     lv_obj_t *img_bg;
@@ -123,7 +124,9 @@ void ui_update_wifi_status(ui_manager_t *ui);
 
 void ui_update_home_wifi_icon(ui_manager_t *ui);
 
+void ui_update_home_bluetooth_icon(ui_manager_t *ui);
 
+void ui_update_bluetooth_status(ui_manager_t *ui);
 
 /*
 #pragma once
