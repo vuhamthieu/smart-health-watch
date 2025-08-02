@@ -16,6 +16,7 @@ idf_component_register(
         lvgl__lvgl
         wifi
         http
+        bluetooth
     PRIV_REQUIRES freertos esp_common driver esp_lcd
     EMBED_FILES "partitions.csv"    
 )

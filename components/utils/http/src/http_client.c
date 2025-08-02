@@ -8,6 +8,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "wifi.h"
+#include <math.h>
 
 static const char *TAG = "HTTP_CLIENT";
 
@@ -24,11 +25,12 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt)
             ESP_LOGI(TAG, "HTTP client disconnected");
             break;
         default:
-            break;
+            break; 
     }
     return ESP_OK;
 }
 
+#if 0
 void send_sensor_data_task(void *pvParameters)
 {
     esp_http_client_config_t config = {
@@ -45,7 +47,6 @@ void send_sensor_data_task(void *pvParameters)
             gps_data_t gps_data = {0};
             gps_get_data(&gps_data);
 
-            // JSON object
             cJSON *root = cJSON_CreateObject();
             cJSON_AddNumberToObject(root, "heart_rate", health_data.heart_rate);
             cJSON_AddNumberToObject(root, "spo2", health_data.spo2);
@@ -54,12 +55,10 @@ void send_sensor_data_task(void *pvParameters)
             cJSON_AddNumberToObject(root, "longitude", gps_data.longitude);
             char *json_data = cJSON_PrintUnformatted(root);
 
-            //  HTTP client
             esp_http_client_handle_t client = esp_http_client_init(&config);
             esp_http_client_set_header(client, "Content-Type", "application/json");
             esp_http_client_set_post_field(client, json_data, strlen(json_data));
 
-            // POST request 
             esp_err_t err = esp_http_client_perform(client);
             if (err == ESP_OK) {
                 ESP_LOGI(TAG, "HTTP POST Status = %d", esp_http_client_get_status_code(client));
@@ -77,14 +76,19 @@ void send_sensor_data_task(void *pvParameters)
         vTaskDelay(pdMS_TO_TICKS(5000)); 
     }
 }
+#endif
 
 void http_client_init(void)
 {
-    xTaskCreate(send_sensor_data_task, "http_client_task", 4096, NULL, 5, NULL);
-    ESP_LOGI(TAG, "HTTP client initialized");
+    ESP_LOGI(TAG, "HTTP client initialized (manual mode)");
 }
 
 void http_client_send_temp(float temperature) {
+    if (!is_wifi_connected()) {
+        ESP_LOGW(TAG, "WiFi not connected, skipping temp data send");
+        return;
+    }
+
     cJSON *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "temperature", roundf(temperature * 100) / 100);
     char *json_data = cJSON_PrintUnformatted(root);
@@ -112,6 +116,11 @@ void http_client_send_temp(float temperature) {
 }
 
 void http_client_send_hr_spo2(int heart_rate, int spo2) {
+    if (!is_wifi_connected()) {
+        ESP_LOGW(TAG, "WiFi not connected, skipping HR/SpO2 data send");
+        return;
+    }
+
     cJSON *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "heart_rate", heart_rate);
     cJSON_AddNumberToObject(root, "spo2", spo2);
@@ -140,6 +149,11 @@ void http_client_send_hr_spo2(int heart_rate, int spo2) {
 }
 
 void http_client_send_gps(float latitude, float longitude) {
+    if (!is_wifi_connected()) {
+        ESP_LOGW(TAG, "WiFi not connected, skipping GPS data send");
+        return;
+    }
+
     cJSON *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "latitude", latitude);
     cJSON_AddNumberToObject(root, "longitude", longitude);
