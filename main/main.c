@@ -13,6 +13,12 @@
 #include "wifi.h"
 #include "nvs_flash.h"
 #include "http_client.h"
+#include "freertos/semphr.h"
+#include "freertos/queue.h"
+
+SemaphoreHandle_t i2c_mutex = NULL;
+SemaphoreHandle_t http_semaphore = NULL;
+QueueHandle_t http_queue = NULL;
 
 #include "lvgl.h"
 #include "lvgl_helpers.h"
@@ -24,6 +30,73 @@ static bool screen_off = false;
 static ui_manager_t ui;
 
 float raw_hr, raw_sp;
+
+// Protected sensor reading functions
+float temperature_get_data_protected()
+{
+    float temp = 0.0;
+    if (xSemaphoreTake(i2c_mutex, pdMS_TO_TICKS(1000)) == pdTRUE)
+    {
+        temp = temperature_get_data();
+        xSemaphoreGive(i2c_mutex);
+        ESP_LOGI("TEMP", "Protected read: %.2f°C", temp);
+    }
+    else
+    {
+        ESP_LOGW("TEMP", "Failed to acquire I2C mutex for temperature");
+    }
+    return temp;
+}
+
+bool health_get_data_protected(health_data_t *health_data)
+{
+    bool success = false;
+    if (xSemaphoreTake(i2c_mutex, pdMS_TO_TICKS(1000)) == pdTRUE)
+    {
+        health_update();
+        health_get_data(health_data);
+        success = true;
+        xSemaphoreGive(i2c_mutex);
+        ESP_LOGI("HEALTH", "Protected read: HR=%d, SpO2=%d",
+                 health_data->heart_rate, health_data->spo2);
+    }
+    else
+    {
+        ESP_LOGW("HEALTH", "Failed to acquire I2C mutex for health");
+    }
+    return success;
+}
+
+bool gps_get_data_protected(gps_data_t *gps_data)
+{
+    bool success = false;
+    if (xSemaphoreTake(i2c_mutex, pdMS_TO_TICKS(500)) == pdTRUE)
+    {
+        gps_get_data(gps_data);
+        success = true;
+        xSemaphoreGive(i2c_mutex);
+        ESP_LOGI("GPS", "Protected read: %.6f, %.6f",
+                 gps_data->latitude, gps_data->longitude);
+    }
+    else
+    {
+        ESP_LOGW("GPS", "Failed to acquire I2C mutex for GPS");
+    }
+    return success;
+}
+
+void temperature_update_protected()
+{
+    if (xSemaphoreTake(i2c_mutex, pdMS_TO_TICKS(500)) == pdTRUE)
+    {
+        temperature_update();
+        xSemaphoreGive(i2c_mutex);
+    }
+    else
+    {
+        ESP_LOGW("TEMP", "Failed to acquire I2C mutex for temperature update");
+    }
+}
 
 void update_interaction_time()
 {
@@ -49,9 +122,9 @@ void wifi_status_task(void *pv)
 {
     for (;;)
     {
-        ui_update_wifi_status(&ui);    
-        ui_update_home_wifi_icon(&ui);   
-        vTaskDelay(pdMS_TO_TICKS(1000)); 
+        ui_update_wifi_status(&ui);
+        ui_update_home_wifi_icon(&ui);
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
@@ -82,19 +155,24 @@ static void gui_task(void *pv)
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
-
 void sensor_manager_task(void *pv)
 {
     bool loggedResult = false;
-    
+    static uint32_t last_http_send = 0;
+    const uint32_t HTTP_SEND_INTERVAL = 3000; // Send every 3 seconds
+
+    ESP_LOGI("SENSOR_MANAGER", "Task started with queue-based HTTP system");
+
     for (;;)
     {
+        uint32_t current_time = xTaskGetTickCount() * portTICK_PERIOD_MS;
+
         switch (ui.current_state)
         {
         case UI_STATE_TEMP_SCANNING:
         {
             loggedResult = false;
-            temperature_update();
+            temperature_update_protected(); // Use protected version
             ui_update_temp(&ui, 0);
 
             uint32_t now = xTaskGetTickCount() * portTICK_PERIOD_MS;
@@ -108,13 +186,29 @@ void sensor_manager_task(void *pv)
 
         case UI_STATE_TEMP_RESULT:
         {
-            if (!loggedResult)
+            if (!loggedResult && (current_time - last_http_send >= HTTP_SEND_INTERVAL))
             {
-                float t = temperature_get_data();
+                float t = temperature_get_data_protected(); // Use protected version
                 ui_update_temp(&ui, t);
-                if (is_wifi_connected()) {
-                    http_client_send_temp(t);
+
+                // Queue HTTP request instead of direct send
+                if (is_wifi_connected())
+                {
+                    http_message_t msg = {
+                        .data_type = 0,
+                        .data.temperature = t};
+
+                    if (xQueueSend(http_queue, &msg, 0) == pdTRUE)
+                    {
+                        ESP_LOGI("SENSOR", "Temperature queued for HTTP send: %.2f", t);
+                        last_http_send = current_time;
+                    }
+                    else
+                    {
+                        ESP_LOGW("SENSOR", "HTTP queue full, skipping temperature send");
+                    }
                 }
+
                 loggedResult = true;
             }
             break;
@@ -122,31 +216,70 @@ void sensor_manager_task(void *pv)
 
         case UI_STATE_HR:
         {
-            health_update();
-            health_data_t hd;
-            health_get_data(&hd);
-
-            if (hd.heart_rate != raw_hr || hd.spo2 != raw_sp)
+            health_data_t hd = {0};
+            if (health_get_data_protected(&hd)) // Use protected version
             {
-                printf("%d,%d\n", hd.heart_rate, hd.spo2);
-                raw_hr = hd.heart_rate;
-                raw_sp = hd.spo2;
-            }
+                // Only send if data changed and enough time passed
+                if ((hd.heart_rate != raw_hr || hd.spo2 != raw_sp) &&
+                    (current_time - last_http_send >= HTTP_SEND_INTERVAL))
+                {
+                    printf("%d,%d\n", hd.heart_rate, hd.spo2);
+                    raw_hr = hd.heart_rate;
+                    raw_sp = hd.spo2;
 
-            ui_update_hr(&ui, hd.heart_rate, hd.spo2);
-            if (is_wifi_connected()) {
-                http_client_send_hr_spo2(hd.heart_rate, hd.spo2);
+                    // Queue HTTP request
+                    if (is_wifi_connected())
+                    {
+                        http_message_t msg = {
+                            .data_type = 1,
+                            .data.health = {hd.heart_rate, hd.spo2}};
+
+                        if (xQueueSend(http_queue, &msg, 0) == pdTRUE)
+                        {
+                            ESP_LOGI("SENSOR", "Health data queued: HR=%d, SpO2=%d",
+                                     hd.heart_rate, hd.spo2);
+                            last_http_send = current_time;
+                        }
+                        else
+                        {
+                            ESP_LOGW("SENSOR", "HTTP queue full, skipping health send");
+                        }
+                    }
+                }
+
+                ui_update_hr(&ui, hd.heart_rate, hd.spo2);
             }
             break;
         }
 
         case UI_STATE_GPS:
         {
-            gps_data_t gps;
-            gps_get_data(&gps);
-            ui_update_gps(&ui, gps.latitude, gps.longitude, gps.valid);
-            if (is_wifi_connected() && gps.valid) {
-                http_client_send_gps(gps.latitude, gps.longitude);
+            gps_data_t gps = {0};
+            if (gps_get_data_protected(&gps)) // Use protected version
+            {
+                ui_update_gps(&ui, gps.latitude, gps.longitude, gps.valid);
+
+                if (gps.valid && (current_time - last_http_send >= HTTP_SEND_INTERVAL))
+                {
+                    // Queue HTTP request
+                    if (is_wifi_connected())
+                    {
+                        http_message_t msg = {
+                            .data_type = 2,
+                            .data.gps = {gps.latitude, gps.longitude}};
+
+                        if (xQueueSend(http_queue, &msg, 0) == pdTRUE)
+                        {
+                            ESP_LOGI("SENSOR", "GPS data queued: %.6f, %.6f",
+                                     gps.latitude, gps.longitude);
+                            last_http_send = current_time;
+                        }
+                        else
+                        {
+                            ESP_LOGW("SENSOR", "HTTP queue full, skipping GPS send");
+                        }
+                    }
+                }
             }
             break;
         }
@@ -158,6 +291,7 @@ void sensor_manager_task(void *pv)
         case UI_STATE_DATA:
         case UI_STATE_BLUETOOTH:
         case UI_STATE_TEMP_IDLE:
+            loggedResult = false; // Reset when not in active sensor states
             break;
 
         default:
@@ -166,7 +300,7 @@ void sensor_manager_task(void *pv)
             break;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(200)); // Increased delay for better coordination
     }
 }
 
@@ -202,13 +336,26 @@ void app_main(void)
         ESP_LOGI("MAIN", "WiFi initialized, waiting for user to start.");
     }
 
-    
-
     vTaskDelay(pdMS_TO_TICKS(1000));
     gps_init();
     temperature_init();
     health_init();
     http_client_init();
+
+        // Create synchronization objects
+    ESP_LOGI("MAIN", "Creating synchronization objects...");
+    i2c_mutex = xSemaphoreCreateMutex();
+    http_semaphore = xSemaphoreCreateBinary();
+    http_queue = xQueueCreate(10, sizeof(http_message_t));
+
+    if (i2c_mutex == NULL || http_semaphore == NULL || http_queue == NULL) {
+        ESP_LOGE("MAIN", "Failed to create synchronization objects");
+        while(1) vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+
+    xSemaphoreGive(http_semaphore); // Initialize as available
+    ESP_LOGI("MAIN", "Synchronization objects created successfully");
+
 
     /* ====== LVGL Initialization ====== */
     lv_init();
@@ -246,10 +393,23 @@ void app_main(void)
     button_init(handle_button);
 
     /* ====== Create Tasks ====== */
-    xTaskCreatePinnedToCore(gui_task, "gui", 8192, NULL, 2, NULL, 0); // Pin to Core 0
-    xTaskCreate(sensor_manager_task, "sensor", 4096, NULL, 5, NULL);
-    xTaskCreate(check_screen_timeout, "screen_timeout", 2048, NULL, 5, NULL);
-    xTaskCreate(wifi_status_task, "wifi_status", 2048, NULL, 5, NULL);
+    ESP_LOGI("MAIN", "Creating tasks with proper priorities...");
+    
+    // Create tasks with proper priorities and error checking
+    BaseType_t ret1 = xTaskCreatePinnedToCore(gui_task, "gui", 8192, NULL, 3, NULL, 0);           // Core 0, Priority 3
+    BaseType_t ret2 = xTaskCreate(sensor_manager_task, "sensor", 4096, NULL, 4, NULL);            // Any core, Priority 4  
+    BaseType_t ret3 = xTaskCreate(http_client_task, "http_client", 4096, NULL, 2, NULL);          // Any core, Priority 2 (lower)
+    BaseType_t ret4 = xTaskCreate(check_screen_timeout, "screen_timeout", 2048, NULL, 1, NULL);   // Any core, Priority 1
+    BaseType_t ret5 = xTaskCreate(wifi_status_task, "wifi_status", 2048, NULL, 1, NULL);          // Any core, Priority 1
+
+    // Check if all tasks were created successfully
+    if (ret1 != pdPASS || ret2 != pdPASS || ret3 != pdPASS || ret4 != pdPASS || ret5 != pdPASS) {
+        ESP_LOGE("MAIN", "Failed to create one or more tasks");
+        while(1) vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+    
+    ESP_LOGI("MAIN", "All tasks created successfully");
+
 
     ESP_LOGI("MAIN", "System initialized with LVGL");
 }
