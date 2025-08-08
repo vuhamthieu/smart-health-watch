@@ -11,14 +11,16 @@
 #include "wifi.h"
 #include "esp_wifi.h"
 
-static const char *TAG = "wifi_station";
-static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
-static int s_retry_num = 0;
 #define MAXIMUM_RETRY 5
+
 bool isWifiConnected = false;
 bool isWifiConnecting = false;
+
+static const char *TAG = "wifi_station";
+static EventGroupHandle_t s_wifi_event_group;
+static int s_retry_num = 0;
 static char saved_ssid[33] = {0};
 static char saved_password[65] = {0}; 
 static bool wifi_connect_failed = false;
