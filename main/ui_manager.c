@@ -17,7 +17,6 @@
 #include "notify_icon.c"
 #include "wifi.h"
 
-
 static const char *TAG = "UI_MANAGER";
 
 static TickType_t last_button_time = 0;
@@ -69,31 +68,38 @@ void ui_create_menu(ui_manager_t *ui)
 
     ui_menu_update_selection(ui);
 }
-void ui_update_wifi_status(ui_manager_t *ui) {
-    if (ui->lbl_wifi_status) {
-        if (is_wifi_connecting()) {
+
+void ui_update_wifi_status(ui_manager_t *ui)
+{
+    if (ui->lbl_wifi_status)
+    {
+        if (is_wifi_connecting())
+        {
             lv_label_set_text(ui->lbl_wifi_status, "WiFi: Connecting...");
             lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
         }
-        else if (is_wifi_connected()) {
+        else if (is_wifi_connected())
+        {
             lv_label_set_text(ui->lbl_wifi_status, "WiFi: Connected");
             lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0x4CAF50), LV_PART_MAIN);
         }
-        else if (!is_wifi_connected() && !is_wifi_connecting() && !is_wifi_connect_failed()) {
+        else if (!is_wifi_connected() && !is_wifi_connecting() && !is_wifi_connect_failed())
+        {
             lv_label_set_text(ui->lbl_wifi_status, "WiFi: OFF");
             lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFF5722), LV_PART_MAIN);
         }
-        else if (is_wifi_connect_failed()) {
+        else if (is_wifi_connect_failed())
+        {
             lv_label_set_text(ui->lbl_wifi_status, "Failed to connect");
             lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFF5722), LV_PART_MAIN);
         }
-        else {
+        else
+        {
             lv_label_set_text(ui->lbl_wifi_status, "WiFi: OFF");
             lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFF5722), LV_PART_MAIN);
         }
     }
 }
-
 
 void ui_update_home_wifi_icon(ui_manager_t *ui)
 {
@@ -168,8 +174,74 @@ void ui_manager_init(ui_manager_t *ui)
     /* ---------- Notifications ---------- */
     ui->scr_notify = lv_obj_create(NULL);
 
-    /* ---------- Dashboard ----------*/
+    /* ---------- DASHBOARD ----------*/
     ui->scr_data = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(ui->scr_data, lv_color_black(), LV_PART_MAIN);
+
+    lv_obj_t *lbl_data_title = lv_label_create(ui->scr_data);
+    lv_label_set_text(lbl_data_title, "DASHBOARD");
+    lv_obj_set_style_text_color(lbl_data_title, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+    lv_obj_align(lbl_data_title, LV_ALIGN_TOP_MID, 0, 10);
+
+    lv_obj_t *data_container = lv_obj_create(ui->scr_data);
+    lv_obj_set_size(data_container, LV_PCT(85), 120);
+    lv_obj_set_style_bg_color(data_container, lv_color_hex(0x1a1a1a), LV_PART_MAIN);
+    lv_obj_set_style_border_width(data_container, 0, LV_PART_MAIN);
+    lv_obj_center(data_container);
+
+    ui->bar_temp = lv_bar_create(data_container);
+    lv_obj_set_size(ui->bar_temp, 40, 10); 
+    lv_bar_set_range(ui->bar_temp, 0, 50);
+    lv_bar_set_value(ui->bar_temp, 0, 0);
+    lv_obj_align(ui->bar_temp, LV_ALIGN_TOP_MID, 0, 20);
+    static lv_style_t bar_style_temp;
+    lv_style_init(&bar_style_temp);
+    lv_style_set_bg_color(&bar_style_temp, lv_color_hex(0x1a1a1a)); 
+    lv_style_set_bg_opa(&bar_style_temp, LV_OPA_COVER);
+    lv_style_set_border_width(&bar_style_temp, 0);
+    lv_style_set_shadow_color(&bar_style_temp, lv_color_hex(0xFF6B35));
+    lv_obj_add_style(ui->bar_temp, &bar_style_temp, 0);
+
+    ui->bar_hr = lv_bar_create(data_container);
+    lv_obj_set_size(ui->bar_hr, 40, 10);
+    lv_bar_set_range(ui->bar_hr, 0, 200);
+    lv_bar_set_value(ui->bar_hr, 0, 0);
+    lv_obj_align(ui->bar_hr, LV_ALIGN_TOP_MID, -50, 40); 
+    static lv_style_t bar_style_hr;
+    lv_style_init(&bar_style_hr);
+    lv_style_set_bg_color(&bar_style_hr, lv_color_hex(0x1a1a1a));
+    lv_style_set_bg_opa(&bar_style_hr, LV_OPA_COVER);
+    lv_style_set_border_width(&bar_style_hr, 0);
+    lv_style_set_shadow_color(&bar_style_hr, lv_color_hex(0xFF1744));
+    lv_obj_add_style(ui->bar_hr, &bar_style_hr, 0);
+
+    ui->bar_spo2 = lv_bar_create(data_container);
+    lv_obj_set_size(ui->bar_spo2, 40, 10);
+    lv_bar_set_range(ui->bar_spo2, 0, 100);
+    lv_bar_set_value(ui->bar_spo2, 0, 0);
+    lv_obj_align(ui->bar_spo2, LV_ALIGN_TOP_MID, 50, 40); 
+    static lv_style_t bar_style_spo2;
+    lv_style_init(&bar_style_spo2);
+    lv_style_set_bg_color(&bar_style_spo2, lv_color_hex(0x1a1a1a));
+    lv_style_set_bg_opa(&bar_style_spo2, LV_OPA_COVER);
+    lv_style_set_border_width(&bar_style_spo2, 0);
+    lv_style_set_shadow_color(&bar_style_spo2, lv_color_hex(0x00E676));
+    lv_obj_add_style(ui->bar_spo2, &bar_style_spo2, 0);
+
+    ui->lbl_temp_dashboard = lv_label_create(data_container);
+    lv_label_set_text(ui->lbl_temp_dashboard, "Temp: -- °C");
+    lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0xFF6B35), LV_PART_MAIN);
+    lv_obj_align(ui->lbl_temp_dashboard, LV_ALIGN_TOP_MID, 0, 60);
+
+    ui->lbl_hr_dashboard = lv_label_create(data_container);
+    lv_label_set_text(ui->lbl_hr_dashboard, "HR: -- bpm");
+    lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFF1744), LV_PART_MAIN);
+    lv_obj_align(ui->lbl_hr_dashboard, LV_ALIGN_TOP_MID, -50, 80);
+
+    ui->lbl_spo2_dashboard = lv_label_create(data_container);
+    lv_label_set_text(ui->lbl_spo2_dashboard, "SpO2: --%");
+    lv_obj_set_style_text_color(ui->lbl_spo2_dashboard, lv_color_hex(0x00E676), LV_PART_MAIN);
+    lv_obj_align(ui->lbl_spo2_dashboard, LV_ALIGN_TOP_MID, 50, 80);
 
     /* ---------- TEMPERATURE - Professional Dark ---------- */
     ui->scr_temp = lv_obj_create(NULL);
@@ -323,35 +395,47 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
         break;
 
     case UI_STATE_WIFI:
-    if (btn == BUTTON_SELECT) {
-        if (is_wifi_connected() || is_wifi_connecting()) {
-            ESP_LOGI("UI_MANAGER", "Turning WiFi OFF");
-            esp_err_t ret = wifi_stop();
-            if (ret != ESP_OK) {
-                ESP_LOGE("UI_MANAGER", "Failed to stop WiFi: %s", esp_err_to_name(ret));
-                lv_label_set_text(ui->lbl_wifi_status, "WiFi: Error");
-                lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFF5722), LV_PART_MAIN);
-            } else {
-                ui_update_wifi_status(ui);
-                ui_update_home_wifi_icon(ui);
+        if (btn == BUTTON_SELECT)
+        {
+            if (is_wifi_connected() || is_wifi_connecting())
+            {
+                ESP_LOGI("UI_MANAGER", "Turning WiFi OFF");
+                esp_err_t ret = wifi_stop();
+                if (ret != ESP_OK)
+                {
+                    ESP_LOGE("UI_MANAGER", "Failed to stop WiFi: %s", esp_err_to_name(ret));
+                    lv_label_set_text(ui->lbl_wifi_status, "WiFi: Error");
+                    lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFF5722), LV_PART_MAIN);
+                }
+                else
+                {
+                    ui_update_wifi_status(ui);
+                    ui_update_home_wifi_icon(ui);
+                }
             }
-        } else {
-            ESP_LOGI("UI_MANAGER", "Turning WiFi ON");
-            esp_err_t ret = wifi_start();
-            if (ret != ESP_OK) {
-                ESP_LOGE("UI_MANAGER", "Failed to start WiFi: %s", esp_err_to_name(ret));
-                lv_label_set_text(ui->lbl_wifi_status, "WiFi: Error");
-                lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFF5722), LV_PART_MAIN);
-            } else {
-                ui_update_wifi_status(ui);
-                ui_update_home_wifi_icon(ui);
+            else
+            {
+                ESP_LOGI("UI_MANAGER", "Turning WiFi ON");
+                esp_err_t ret = wifi_start();
+                if (ret != ESP_OK)
+                {
+                    ESP_LOGE("UI_MANAGER", "Failed to start WiFi: %s", esp_err_to_name(ret));
+                    lv_label_set_text(ui->lbl_wifi_status, "WiFi: Error");
+                    lv_obj_set_style_text_color(ui->lbl_wifi_status, lv_color_hex(0xFF5722), LV_PART_MAIN);
+                }
+                else
+                {
+                    ui_update_wifi_status(ui);
+                    ui_update_home_wifi_icon(ui);
+                }
             }
         }
-    } else if (btn == BUTTON_BACK) {
-        ESP_LOGI("UI_MANAGER", "Back to menu from WiFi");
-        ui_switch(ui, UI_STATE_MENU);
-    }
-    break;
+        else if (btn == BUTTON_BACK)
+        {
+            ESP_LOGI("UI_MANAGER", "Back to menu from WiFi");
+            ui_switch(ui, UI_STATE_MENU);
+        }
+        break;
 
     case UI_STATE_MENU:
         if (btn == BUTTON_UP)
@@ -422,6 +506,14 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
         }
         break;
 
+    case UI_STATE_DATA:
+        if (btn == BUTTON_BACK)
+        {
+            ESP_LOGI("UI_MANAGER", "Back to menu from dashboard");
+            ui_switch(ui, UI_STATE_MENU);
+        }
+        break;
+
     default:
         ESP_LOGW("UI_MANAGER", "Unhandled button %d in state %d", btn, ui->current_state);
         break;
@@ -467,6 +559,10 @@ void ui_switch(ui_manager_t *ui, ui_state_t new_state)
         break;
     case UI_STATE_GPS:
         target = ui->scr_gps;
+        break;
+    case UI_STATE_DATA:
+        target = ui->scr_data;
+        ui_update_dashboard(ui);
         break;
     default:
         ESP_LOGE("UI_MANAGER", "Unknown UI state: %d", new_state);
@@ -532,7 +628,7 @@ void ui_update_temp(ui_manager_t *ui, float t)
     else
     {
         char temp_str[60];
-        snprintf(temp_str, sizeof(temp_str), "🌡️ %.1f°C\n\nPress SELECT\nto rescan", t);
+        snprintf(temp_str, sizeof(temp_str), "%.1f°C\n\nPress SELECT\nto rescan", t);
         lv_label_set_text(ui->lbl_temp, temp_str);
 
         // Color based on temperature
@@ -577,6 +673,69 @@ void ui_update_hr(ui_manager_t *ui, int hr, int spo2)
         lv_label_set_text(ui->lbl_hr, LV_SYMBOL_LOOP "Scanning...");
         lv_label_set_text(ui->lbl_spo2, "Please wait");
         lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
+    }
+}
+
+void ui_update_dashboard(ui_manager_t *ui)
+{
+    if (ui->current_state != UI_STATE_DATA)
+        return;
+
+    float temperature = temperature_get_data();
+    if (temperature > -273.0f && !isnan(temperature))
+    {
+        lv_bar_set_value(ui->bar_temp, 0, (int)temperature);
+        char temp_str[20];
+        snprintf(temp_str, sizeof(temp_str), "Temp: %.1f °C", temperature);
+        lv_label_set_text(ui->lbl_temp_dashboard, temp_str);
+        if (temperature > 37.5)
+        {
+            lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0xFF5722), LV_PART_MAIN);
+        }
+        else if (temperature > 36.0)
+        {
+            lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0x4CAF50), LV_PART_MAIN);
+        }
+        else
+        {
+            lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0x2196F3), LV_PART_MAIN);
+        }
+    }
+    else
+    {
+        lv_bar_set_value(ui->bar_temp, 0, 0);
+        lv_label_set_text(ui->lbl_temp_dashboard, "Temp: -- °C");
+        lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
+    }
+
+    health_data_t hd;
+    health_get_data(&hd);
+    if (hd.heart_rate > 0 && hd.spo2 > 0)
+    {
+        lv_bar_set_value(ui->bar_hr, 0, hd.heart_rate);
+        lv_bar_set_value(ui->bar_spo2, 0, hd.spo2);
+        lv_label_set_text_fmt(ui->lbl_hr_dashboard, "HR: %d bpm", hd.heart_rate);
+        lv_label_set_text_fmt(ui->lbl_spo2_dashboard, "SpO2: %d%%", hd.spo2);
+        if (hd.heart_rate > 100)
+        {
+            lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFF5722), LV_PART_MAIN);
+        }
+        else if (hd.heart_rate >= 60)
+        {
+            lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0x4CAF50), LV_PART_MAIN);
+        }
+        else
+        {
+            lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFFC107), LV_PART_MAIN);
+        }
+    }
+    else
+    {
+        lv_bar_set_value(ui->bar_hr, 0, 0);
+        lv_bar_set_value(ui->bar_spo2, 0, 0);
+        lv_label_set_text(ui->lbl_hr_dashboard, "HR: -- bpm");
+        lv_label_set_text(ui->lbl_spo2_dashboard, "SpO2: --%");
+        lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
     }
 }
 

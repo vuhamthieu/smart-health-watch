@@ -2,9 +2,9 @@
 #include "lvgl.h"
 #include "button.h"
 
-#define COLOR_BG_NORMAL    lv_color_hex(0x242424)
-#define COLOR_BG_SELECTED  lv_color_hex(0x919191)
-#define COLOR_TEXT_NORMAL  lv_color_white()
+#define COLOR_BG_NORMAL lv_color_hex(0x242424)
+#define COLOR_BG_SELECTED lv_color_hex(0x919191)
+#define COLOR_TEXT_NORMAL lv_color_white()
 #define COLOR_TEXT_SELECTED lv_color_white()
 #define COLOR_TEXT lv_color_hex(0xFFFFFF)
 
@@ -16,17 +16,17 @@ extern const lv_img_dsc_t notify_icon;
 extern const lv_img_dsc_t wifi_icon;
 extern const lv_img_dsc_t bluetooth_icon;
 
-
-#define GPS_ICON  (&gps_icon)
-#define TEMP_ICON  (&temp_icon)
-#define HEART_ICON  (&heart_icon)
-#define DATA_ICON  (&data_icon)
-#define NOTIFY_ICON  (&notify_icon)
+#define GPS_ICON (&gps_icon)
+#define TEMP_ICON (&temp_icon)
+#define HEART_ICON (&heart_icon)
+#define DATA_ICON (&data_icon)
+#define NOTIFY_ICON (&notify_icon)
 
 #define SCREEN_TIMEOUT_MS 20000
 #define TFT_BL_PIN 19
 
-typedef enum {
+typedef enum
+{
     UI_STATE_HOME,
     UI_STATE_MENU,
     UI_STATE_NOTIFY,
@@ -40,17 +40,20 @@ typedef enum {
     UI_STATE_BLUETOOTH
 } ui_state_t;
 
-typedef struct {
+typedef struct
+{
     int battery;
     char date[11];
 } ui_info_t;
 
-typedef struct {
+typedef struct
+{
     const char *name;
-    ui_state_t  state;
+    ui_state_t state;
 } menu_item_t;
 
-typedef struct {
+typedef struct
+{
     /* Screens */
     lv_obj_t *scr_home;
     lv_obj_t *scr_menu;
@@ -67,6 +70,13 @@ typedef struct {
     lv_obj_t *lbl_date;
     lv_obj_t *lbl_wifi;
     lv_obj_t *lbl_bluetooth;
+    lv_obj_t *lbl_hr_dashboard;
+    lv_obj_t *lbl_spo2_dashboard;
+    lv_obj_t *lbl_temp_dashboard;
+
+    lv_obj_t *bar_temp; 
+    lv_obj_t *bar_hr;  
+    lv_obj_t *bar_spo2;
 
     /* Status for wifi and bluetooth*/
     lv_obj_t *lbl_wifi_status;
@@ -80,8 +90,8 @@ typedef struct {
     lv_obj_t *list_menu;
     /* Menu data */
     menu_item_t menu_items[10];
-    int          menu_item_count;
-    int          selected_index;
+    int menu_item_count;
+    int selected_index;
 
     /* Temp screen */
     lv_obj_t *lbl_temp;
@@ -96,11 +106,10 @@ typedef struct {
 
     /* State & info */
     ui_state_t current_state;
-    ui_info_t  info;
-    uint32_t   scan_start_time_ms;
-    bool       scan_done;
+    ui_info_t info;
+    uint32_t scan_start_time_ms;
+    bool scan_done;
 } ui_manager_t;
-
 
 void ui_reset_screen_state(ui_manager_t *ui, ui_state_t state);
 
@@ -128,49 +137,4 @@ void ui_update_home_bluetooth_icon(ui_manager_t *ui);
 
 void ui_update_bluetooth_status(ui_manager_t *ui);
 
-/*
-#pragma once
-
-#include "u8g2.h"
-#include "button.h"
-
-typedef enum
-{
-    UI_STATE_HOME, 
-    UI_STATE_MENU,
-    UI_STATE_TEMP_IDLE,
-    UI_STATE_TEMP_SCANNING,
-    UI_STATE_TEMP_RESULT,
-    UI_STATE_HR,
-    UI_STATE_GPS
-} ui_state_t;
-
-typedef struct
-{
-    int battery;
-    char date[11]; // "YYYY-MM-DD"
-} ui_info_t;
-
-typedef struct
-{
-    const char *name;
-    ui_state_t state;
-} menu_item_t;
-
-typedef struct
-{
-    u8g2_t *u8g2;
-    ui_state_t current_state;
-    int selected_index;
-    menu_item_t menu_items[3];
-    int menu_item_count;
-    ui_info_t info;
-    uint32_t scan_start_time_ms;
-    bool scan_done;
-
-} ui_manager_t;
-
-void ui_manager_init(ui_manager_t *ui, u8g2_t *u8g2);
-void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn);
-void ui_manager_update_display(ui_manager_t *ui);
-*/
+void ui_update_dashboard(ui_manager_t *ui);
