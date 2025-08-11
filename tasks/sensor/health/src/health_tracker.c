@@ -32,7 +32,7 @@ void health_update(void)
         s_data.heart_rate = (int)d.heart_bpm;
         s_data.spo2 = (int)d.spO2;
         s_data.valid = true;
-        //ESP_LOGI(TAG, "Heart Rate: %d bpm, SpO2: %d%%", s_data.heart_rate, s_data.spo2);
+        // ESP_LOGI(TAG, "Heart Rate: %d bpm, SpO2: %d%%", s_data.heart_rate, s_data.spo2);
     }
     else
     {
@@ -41,11 +41,11 @@ void health_update(void)
     }
     if (d.pulse_detected)
     {
-        //ESP_LOGI("HEALTH", "Pulse detected @ BPM: %.2f", d.heart_bpm);
+        // ESP_LOGI("HEALTH", "Pulse detected @ BPM: %.2f", d.heart_bpm);
     }
     else
     {
-            //ESP_LOGW("HEALTH", "No pulse detected for %d updates.");
+        // ESP_LOGW("HEALTH", "No pulse detected for %d updates.");
     }
 }
 
