@@ -190,13 +190,13 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_center(data_container);
 
     ui->bar_temp = lv_bar_create(data_container);
-    lv_obj_set_size(ui->bar_temp, 40, 10); 
+    lv_obj_set_size(ui->bar_temp, 40, 10);
     lv_bar_set_range(ui->bar_temp, 0, 50);
     lv_bar_set_value(ui->bar_temp, 0, 0);
     lv_obj_align(ui->bar_temp, LV_ALIGN_TOP_MID, 0, 20);
     static lv_style_t bar_style_temp;
     lv_style_init(&bar_style_temp);
-    lv_style_set_bg_color(&bar_style_temp, lv_color_hex(0x1a1a1a)); 
+    lv_style_set_bg_color(&bar_style_temp, lv_color_hex(0x1a1a1a));
     lv_style_set_bg_opa(&bar_style_temp, LV_OPA_COVER);
     lv_style_set_border_width(&bar_style_temp, 0);
     lv_style_set_shadow_color(&bar_style_temp, lv_color_hex(0xFF6B35));
@@ -206,7 +206,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_size(ui->bar_hr, 40, 10);
     lv_bar_set_range(ui->bar_hr, 0, 200);
     lv_bar_set_value(ui->bar_hr, 0, 0);
-    lv_obj_align(ui->bar_hr, LV_ALIGN_TOP_MID, -50, 40); 
+    lv_obj_align(ui->bar_hr, LV_ALIGN_TOP_MID, -50, 40);
     static lv_style_t bar_style_hr;
     lv_style_init(&bar_style_hr);
     lv_style_set_bg_color(&bar_style_hr, lv_color_hex(0x1a1a1a));
@@ -219,7 +219,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_size(ui->bar_spo2, 40, 10);
     lv_bar_set_range(ui->bar_spo2, 0, 100);
     lv_bar_set_value(ui->bar_spo2, 0, 0);
-    lv_obj_align(ui->bar_spo2, LV_ALIGN_TOP_MID, 50, 40); 
+    lv_obj_align(ui->bar_spo2, LV_ALIGN_TOP_MID, 50, 40);
     static lv_style_t bar_style_spo2;
     lv_style_init(&bar_style_spo2);
     lv_style_set_bg_color(&bar_style_spo2, lv_color_hex(0x1a1a1a));
@@ -588,7 +588,6 @@ void ui_switch(ui_manager_t *ui, ui_state_t new_state)
     }
     else
     {
-
         ESP_LOGE("UI_MANAGER", "Failed to switch to state %d - invalid target", new_state);
         // Last resort: try to load home screen without animation
         if (ui->scr_home != NULL)
