@@ -7,9 +7,15 @@ function updateData() {
             return response.json();
         })
         .then(data => {
-            document.getElementById('heart_rate').textContent = data.heart_rate || 0;
-            document.getElementById('spo2').textContent = data.spo2 || 0;
-            document.getElementById('temperature').textContent = data.temperature || 0;
+            const hr = data.heart_rate ?? 0;
+            const sp = data.spo2 ?? 0;
+            const tp = data.temperature ?? 0;
+            document.getElementById('heart_rate').textContent = `${hr} bpm`;
+            document.getElementById('spo2').textContent = `${sp} %`;
+            document.getElementById('temperature').textContent = `${Number(tp).toFixed(2)} °C`;
+            const status = (data._last_ts && (Date.now()/1000 - data._last_ts) < 5) ? 'Connected' : 'Disconnected';
+            const el = document.getElementById('connection_status');
+            if (el) el.textContent = status;
         })
         .catch(error => console.error('Error fetching data:', error));
 }

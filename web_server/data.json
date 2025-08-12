@@ -1,7 +1,8 @@
 {
-    "heart_rate": 105,
-    "spo2": 100,
-    "temperature": 31.42999267578125,
+    "heart_rate": 92,
+    "spo2": 92,
+    "temperature": 38.66999816894531,
     "latitude": 0,
-    "longitude": 0
+    "longitude": 0,
+    "_last_ts": 1754993253.3419886
 }

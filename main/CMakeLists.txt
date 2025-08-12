@@ -4,7 +4,6 @@ idf_component_register(
     REQUIRES
         max30100
         mlx90614
-        neo6m
         button
         i2c
         u8g2
@@ -16,6 +15,7 @@ idf_component_register(
         lvgl__lvgl
         wifi
         http
+        mqttc
         bluetooth
     PRIV_REQUIRES freertos esp_common driver esp_lcd
     EMBED_FILES "partitions.csv"    

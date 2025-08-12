@@ -13,7 +13,7 @@
         <h1>Health Monitor Dashboard</h1>
         <div class="data-box">
             <h2 style="color: blue">Connection Status</h2>
-            <p id="connection_status">Disconnected</p>
+            <p id="connection_status">{{ connection_status or 'Disconnected' }}</p>
         </div>
         <div class="data-box">
             <h2 style="color: red">Heart Rate</h2>

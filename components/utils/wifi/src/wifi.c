@@ -22,7 +22,7 @@ static const char *TAG = "wifi_station";
 static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num = 0;
 static char saved_ssid[33] = {0};
-static char saved_password[65] = {0}; 
+static char saved_password[65] = {0};
 static bool wifi_connect_failed = false;
 
 
@@ -145,7 +145,6 @@ esp_err_t wifi_start(void) {
     }
     return ret;
 }
-
 
 bool is_wifi_connected(void) {
     return isWifiConnected;
