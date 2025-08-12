@@ -13,6 +13,8 @@
 #include "wifi.h"
 #include "nvs_flash.h"
 #include "http_client.h"
+#include "mqtt.h"
+#include "mqtt_task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 
@@ -321,10 +323,10 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
-    // const char *ssid = "Cafe nui 2.4G";
-    // const char *pass = "nguyenchat";
-    const char *ssid = "Samsung Galaxy S8";
-    const char *pass = "88888888";
+    const char *ssid = "Cafe nui 2.4G";
+    const char *pass = "nguyenchat";
+    // const char *ssid = "Samsung Galaxy S8";
+    // const char *pass = "88888888";
     
     esp_err_t wifi_ok = wifi_init(ssid, pass);
     if (wifi_ok != ESP_OK)
@@ -396,11 +398,11 @@ void app_main(void)
     /* ====== Create Tasks ====== */
     ESP_LOGI("MAIN", "Creating tasks with proper priorities...");
 
-    BaseType_t ret1 = xTaskCreatePinnedToCore(gui_task, "gui", 8192, NULL, 3, NULL, 0);         
-    BaseType_t ret2 = xTaskCreate(sensor_manager_task, "sensor", 4096, NULL, 4, NULL);         
-    BaseType_t ret3 = xTaskCreate(http_client_task, "http_client", 4096, NULL, 2, NULL);      
-    BaseType_t ret4 = xTaskCreate(check_screen_timeout, "screen_timeout", 2048, NULL, 1, NULL); 
-    BaseType_t ret5 = xTaskCreate(wifi_status_task, "wifi_status", 2048, NULL, 1, NULL);       
+    BaseType_t ret1 = xTaskCreatePinnedToCore(gui_task, "gui", 8192, NULL, 3, NULL, 0);
+    BaseType_t ret2 = xTaskCreate(sensor_manager_task, "sensor", 4096, NULL, 4, NULL);
+    BaseType_t ret3 = xTaskCreate(mqtt_client_task, "mqtt_client", 4096, NULL, 2, NULL);
+    BaseType_t ret4 = xTaskCreate(check_screen_timeout, "screen_timeout", 2048, NULL, 1, NULL);
+    BaseType_t ret5 = xTaskCreate(wifi_status_task, "wifi_status", 2048, NULL, 1, NULL);
 
     if (ret1 != pdPASS || ret2 != pdPASS || ret3 != pdPASS || ret4 != pdPASS || ret5 != pdPASS)
     {
