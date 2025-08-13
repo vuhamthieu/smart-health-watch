@@ -2,10 +2,25 @@
 #include "esp_log.h"
 #include "mqtt.h"
 #include "wifi.h"
+#include <string.h>
+
+#ifndef MQTT_TOPIC_BASE
+#define MQTT_TOPIC_BASE "health_monitor/device01"
+#endif
 
 static const char* TAG = "mqttc";
 static esp_mqtt_client_handle_t s_client = NULL;
+static char s_status_topic[128] = {0};
 static bool s_connected = false;
+
+static void publish_status(const char* status)
+{
+    if (!s_connected && strcmp(status, "connected") == 0) {
+        // Avoid publishing before flag set, but ok to publish in handler after flag
+    }
+    if (s_status_topic[0] == '\0') return;
+    esp_mqtt_client_publish(s_client, s_status_topic, status, 0, 1, true);
+}
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t eid, void *event_data) {
     esp_mqtt_event_handle_t e = event_data;
@@ -13,10 +28,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_CONNECTED:
         s_connected = true;
         ESP_LOGI(TAG, "Connected");
+        publish_status("connected");
         break;
     case MQTT_EVENT_DISCONNECTED:
         s_connected = false;
         ESP_LOGW(TAG, "Disconnected");
+        publish_status("disconnected");
         break;
     case MQTT_EVENT_DATA:
         ESP_LOGI(TAG, "RX [%.*s]=[%.*s]", e->topic_len, e->topic, e->data_len, e->data);
@@ -31,11 +48,14 @@ esp_err_t mqttc_init(const char* uri, const char* client_id) {
         .broker.address.uri = uri,
         .credentials.client_id = client_id,
         .session.keepalive = 60,
-        .session.last_will.topic = NULL,
     };
     s_client = esp_mqtt_client_init(&cfg);
     if (!s_client) return ESP_FAIL;
     ESP_ERROR_CHECK(esp_mqtt_client_register_event(s_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL));
+
+    // Prepare status topic
+    snprintf(s_status_topic, sizeof(s_status_topic), "%s/status", MQTT_TOPIC_BASE);
+
     return ESP_OK;
 }
 
