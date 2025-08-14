@@ -174,74 +174,75 @@ void ui_manager_init(ui_manager_t *ui)
     /* ---------- Notifications ---------- */
     ui->scr_notify = lv_obj_create(NULL);
 
-    /* ---------- DASHBOARD ----------*/
+    /* ---------- DASHBOARD - Modern Clean Style ----------*/
     ui->scr_data = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_data, lv_color_black(), LV_PART_MAIN);
 
     lv_obj_t *lbl_data_title = lv_label_create(ui->scr_data);
     lv_label_set_text(lbl_data_title, "DASHBOARD");
     lv_obj_set_style_text_color(lbl_data_title, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_align(lbl_data_title, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_set_style_text_font(lbl_data_title, &lv_font_montserrat_14, LV_PART_MAIN);
+    lv_obj_align(lbl_data_title, LV_ALIGN_TOP_MID, 0, 8);
 
-    lv_obj_t *data_container = lv_obj_create(ui->scr_data);
-    lv_obj_set_size(data_container, LV_PCT(85), 120);
-    lv_obj_set_style_bg_color(data_container, lv_color_hex(0x1a1a1a), LV_PART_MAIN);
-    lv_obj_set_style_border_width(data_container, 0, LV_PART_MAIN);
-    lv_obj_center(data_container);
-
-    ui->bar_temp = lv_bar_create(data_container);
-    lv_obj_set_size(ui->bar_temp, 40, 10);
+    // Temperature bar (directly on screen, no container)
+    ui->bar_temp = lv_bar_create(ui->scr_data);
+    lv_obj_set_size(ui->bar_temp, 100, 8);
     lv_bar_set_range(ui->bar_temp, 0, 50);
-    lv_bar_set_value(ui->bar_temp, 0, 0);
-    lv_obj_align(ui->bar_temp, LV_ALIGN_TOP_MID, 0, 20);
+    lv_bar_set_value(ui->bar_temp, 0, LV_ANIM_OFF);
+    lv_obj_align(ui->bar_temp, LV_ALIGN_TOP_MID, 0, 35);
     static lv_style_t bar_style_temp;
     lv_style_init(&bar_style_temp);
-    lv_style_set_bg_color(&bar_style_temp, lv_color_hex(0x1a1a1a));
+    lv_style_set_bg_color(&bar_style_temp, lv_color_hex(0x2a2a2a));
     lv_style_set_bg_opa(&bar_style_temp, LV_OPA_COVER);
     lv_style_set_border_width(&bar_style_temp, 0);
-    lv_style_set_shadow_color(&bar_style_temp, lv_color_hex(0xFF6B35));
+    lv_style_set_radius(&bar_style_temp, 4);
     lv_obj_add_style(ui->bar_temp, &bar_style_temp, 0);
 
-    ui->bar_hr = lv_bar_create(data_container);
-    lv_obj_set_size(ui->bar_hr, 40, 10);
+    // HR bar (left side)
+    ui->bar_hr = lv_bar_create(ui->scr_data);
+    lv_obj_set_size(ui->bar_hr, 55, 8);
     lv_bar_set_range(ui->bar_hr, 0, 200);
-    lv_bar_set_value(ui->bar_hr, 0, 0);
-    lv_obj_align(ui->bar_hr, LV_ALIGN_TOP_MID, -50, 40);
+    lv_bar_set_value(ui->bar_hr, 0, LV_ANIM_OFF);
+    lv_obj_align(ui->bar_hr, LV_ALIGN_TOP_LEFT, 8, 75);
     static lv_style_t bar_style_hr;
     lv_style_init(&bar_style_hr);
-    lv_style_set_bg_color(&bar_style_hr, lv_color_hex(0x1a1a1a));
+    lv_style_set_bg_color(&bar_style_hr, lv_color_hex(0x2a2a2a));
     lv_style_set_bg_opa(&bar_style_hr, LV_OPA_COVER);
     lv_style_set_border_width(&bar_style_hr, 0);
-    lv_style_set_shadow_color(&bar_style_hr, lv_color_hex(0xFF1744));
+    lv_style_set_radius(&bar_style_hr, 4);
     lv_obj_add_style(ui->bar_hr, &bar_style_hr, 0);
 
-    ui->bar_spo2 = lv_bar_create(data_container);
-    lv_obj_set_size(ui->bar_spo2, 40, 10);
+    // SpO2 bar (right side)
+    ui->bar_spo2 = lv_bar_create(ui->scr_data);
+    lv_obj_set_size(ui->bar_spo2, 55, 8);
     lv_bar_set_range(ui->bar_spo2, 0, 100);
-    lv_bar_set_value(ui->bar_spo2, 0, 0);
-    lv_obj_align(ui->bar_spo2, LV_ALIGN_TOP_MID, 50, 40);
+    lv_bar_set_value(ui->bar_spo2, 0, LV_ANIM_OFF);
+    lv_obj_align(ui->bar_spo2, LV_ALIGN_TOP_RIGHT, -8, 75);
     static lv_style_t bar_style_spo2;
     lv_style_init(&bar_style_spo2);
-    lv_style_set_bg_color(&bar_style_spo2, lv_color_hex(0x1a1a1a));
+    lv_style_set_bg_color(&bar_style_spo2, lv_color_hex(0x2a2a2a));
     lv_style_set_bg_opa(&bar_style_spo2, LV_OPA_COVER);
     lv_style_set_border_width(&bar_style_spo2, 0);
-    lv_style_set_shadow_color(&bar_style_spo2, lv_color_hex(0x00E676));
+    lv_style_set_radius(&bar_style_spo2, 4);
     lv_obj_add_style(ui->bar_spo2, &bar_style_spo2, 0);
 
-    ui->lbl_temp_dashboard = lv_label_create(data_container);
+    // Temperature label (below temp bar)
+    ui->lbl_temp_dashboard = lv_label_create(ui->scr_data);
     lv_label_set_text(ui->lbl_temp_dashboard, "Temp: -- °C");
     lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0xFF6B35), LV_PART_MAIN);
-    lv_obj_align(ui->lbl_temp_dashboard, LV_ALIGN_TOP_MID, 0, 60);
+    lv_obj_align(ui->lbl_temp_dashboard, LV_ALIGN_TOP_MID, 0, 50);
 
-    ui->lbl_hr_dashboard = lv_label_create(data_container);
-    lv_label_set_text(ui->lbl_hr_dashboard, "HR: -- bpm");
+    // HR label (below HR bar, left side)
+    ui->lbl_hr_dashboard = lv_label_create(ui->scr_data);
+    lv_label_set_text(ui->lbl_hr_dashboard, "HR: --");
     lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFF1744), LV_PART_MAIN);
-    lv_obj_align(ui->lbl_hr_dashboard, LV_ALIGN_TOP_MID, -50, 80);
+    lv_obj_align(ui->lbl_hr_dashboard, LV_ALIGN_TOP_LEFT, 8, 90);
 
-    ui->lbl_spo2_dashboard = lv_label_create(data_container);
+    // SpO2 label (below SpO2 bar, right side - different line)
+    ui->lbl_spo2_dashboard = lv_label_create(ui->scr_data);
     lv_label_set_text(ui->lbl_spo2_dashboard, "SpO2: --%");
     lv_obj_set_style_text_color(ui->lbl_spo2_dashboard, lv_color_hex(0x00E676), LV_PART_MAIN);
-    lv_obj_align(ui->lbl_spo2_dashboard, LV_ALIGN_TOP_MID, 50, 80);
+    lv_obj_align(ui->lbl_spo2_dashboard, LV_ALIGN_TOP_RIGHT, -8, 105);
 
     /* ---------- TEMPERATURE - Professional Dark ---------- */
     ui->scr_temp = lv_obj_create(NULL);
@@ -683,9 +684,9 @@ void ui_update_dashboard(ui_manager_t *ui)
     float temperature = temperature_get_data();
     if (temperature > -273.0f && !isnan(temperature))
     {
-        lv_bar_set_value(ui->bar_temp, 0, (int)temperature);
+        lv_bar_set_value(ui->bar_temp, (int)temperature, LV_ANIM_ON);
         char temp_str[20];
-        snprintf(temp_str, sizeof(temp_str), "Temp: %.1f °C", temperature);
+        snprintf(temp_str, sizeof(temp_str), "Temp: %.2f °C", temperature);
         lv_label_set_text(ui->lbl_temp_dashboard, temp_str);
         if (temperature > 37.5)
         {
