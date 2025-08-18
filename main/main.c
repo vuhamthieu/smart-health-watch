@@ -134,7 +134,7 @@ void wifi_status_task(void *pv)
 static void lv_tick_task(void *arg)
 {
     (void)arg;
-    lv_tick_inc(1); 
+    lv_tick_inc(1);
 }
 
 static void handle_button(button_id_t btn)
@@ -161,7 +161,7 @@ void sensor_manager_task(void *pv)
 {
     bool loggedResult = false;
     static uint32_t last_http_send = 0;
-    const uint32_t HTTP_SEND_INTERVAL = 3000; 
+    const uint32_t HTTP_SEND_INTERVAL = 3000;
 
     ESP_LOGI("SENSOR_MANAGER", "Task started with queue-based HTTP system");
 
@@ -174,7 +174,7 @@ void sensor_manager_task(void *pv)
         case UI_STATE_TEMP_SCANNING:
         {
             loggedResult = false;
-            temperature_update_protected(); 
+            temperature_update_protected();
             ui_update_temp(&ui, 0);
 
             uint32_t now = xTaskGetTickCount() * portTICK_PERIOD_MS;
@@ -190,7 +190,7 @@ void sensor_manager_task(void *pv)
         {
             if (!loggedResult && (current_time - last_http_send >= HTTP_SEND_INTERVAL))
             {
-                float t = temperature_get_data_protected(); 
+                float t = temperature_get_data_protected();
                 ui_update_temp(&ui, t);
 
                 if (is_wifi_connected())
@@ -211,11 +211,11 @@ void sensor_manager_task(void *pv)
                 }
 
                 // Send via Bluetooth
-                if (bluetooth_is_connected())
-                {
-                    bluetooth_notify_temperature(t);
-                    ESP_LOGI("SENSOR", "Temperature sent via BLE: %.2f", t);
-                }
+                // if (bluetooth_is_connected())
+                // {
+                //     bluetooth_notify_temperature(t);
+                //     ESP_LOGI("SENSOR", "Temperature sent via BLE: %.2f", t);
+                // }
 
                 loggedResult = true;
             }
@@ -254,11 +254,11 @@ void sensor_manager_task(void *pv)
                     }
 
                     // Send via Bluetooth
-                    if (bluetooth_is_connected())
-                    {
-                        bluetooth_notify_heart_rate(hd.heart_rate, hd.spo2);
-                        ESP_LOGI("SENSOR", "Health data sent via BLE: HR=%d, SpO2=%d", hd.heart_rate, hd.spo2);
-                    }
+                    // if (bluetooth_is_connected())
+                    // {
+                    //     bluetooth_notify_heart_rate(hd.heart_rate, hd.spo2);
+                    //     ESP_LOGI("SENSOR", "Health data sent via BLE: HR=%d, SpO2=%d", hd.heart_rate, hd.spo2);
+                    // }
                 }
 
                 ui_update_hr(&ui, hd.heart_rate, hd.spo2);
@@ -295,11 +295,11 @@ void sensor_manager_task(void *pv)
                     }
 
                     // Send via Bluetooth
-                    if (bluetooth_is_connected())
-                    {
-                        bluetooth_notify_gps(gps.latitude, gps.longitude);
-                        ESP_LOGI("SENSOR", "GPS data sent via BLE: %.6f, %.6f", gps.latitude, gps.longitude);
-                    }
+                    // if (bluetooth_is_connected())
+                    // {
+                    //     bluetooth_notify_gps(gps.latitude, gps.longitude);
+                    //     ESP_LOGI("SENSOR", "GPS data sent via BLE: %.6f, %.6f", gps.latitude, gps.longitude);
+                    // }
                 }
             }
             break;
@@ -312,7 +312,7 @@ void sensor_manager_task(void *pv)
         case UI_STATE_DATA:
         case UI_STATE_BLUETOOTH:
         case UI_STATE_TEMP_IDLE:
-            loggedResult = false; 
+            loggedResult = false;
             break;
 
         default:
@@ -321,7 +321,7 @@ void sensor_manager_task(void *pv)
             break;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(100)); 
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -349,7 +349,7 @@ void app_main(void)
     const char *pass = "nguyenchat";
     // const char *ssid = "Samsung Galaxy S8";
     // const char *pass = "88888888";
-    
+
     esp_err_t wifi_ok = wifi_init(ssid, pass);
     if (wifi_ok != ESP_OK)
     {
@@ -367,12 +367,15 @@ void app_main(void)
     http_client_init();
 
     // Initialize Bluetooth
-    esp_err_t ble_ret = bluetooth_init();
-    if (ble_ret != ESP_OK) {
-        ESP_LOGE("MAIN", "Bluetooth init failed: %s", esp_err_to_name(ble_ret));
-    } else {
-        ESP_LOGI("MAIN", "Bluetooth initialized successfully");
-    }
+    // esp_err_t ble_ret = bluetooth_init();
+    // if (ble_ret != ESP_OK)
+    // {
+    //     ESP_LOGE("MAIN", "Bluetooth init failed: %s", esp_err_to_name(ble_ret));
+    // }
+    // else
+    // {
+    //     ESP_LOGI("MAIN", "Bluetooth initialized successfully");
+    // }
 
     // Create synchronization objects
     ESP_LOGI("MAIN", "Creating synchronization objects...");
