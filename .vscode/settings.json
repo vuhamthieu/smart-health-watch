@@ -18,7 +18,6 @@
   ],      
   "idf.flashType": "UART",
   "files.associations": {
-    "u8g2.h": "c",
     "button.h": "c",
     "esp_err.h": "c",
     "esp_log.h": "c",
@@ -26,7 +25,6 @@
     "future": "cpp",
     "i2c.h": "c",
     "temperature_task.h": "c",
-    "u8g2_esp32_hal.h": "c",
     "lvgl_helpers.h": "c",
     "cstdlib": "c",
     "cstdint": "c"

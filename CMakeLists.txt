@@ -14,7 +14,6 @@ set(EXTRA_COMPONENT_DIRS
     components/utils/http
     components/utils/mqttc
     components/utils/bluetooth
-    components/libs/u8g2
     components/libs/max30100
     components/lvgl__lvgl
     tasks/gps

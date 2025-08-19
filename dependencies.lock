@@ -10,8 +10,7 @@ dependencies:
       type: local
     version: 8.3.11
 direct_dependencies:
-- idf
 - lvgl/lvgl
-manifest_hash: 6115f84725e9f05c9f8bd96d2b71dc7d7aa32ece0dfe04c51b060bfe4c8b876c
+manifest_hash: e8b303e85be99bd8c7d9d821393672646a0af77e20c9aaf6251f2f672e4c9220
 target: esp32
 version: 2.0.0
