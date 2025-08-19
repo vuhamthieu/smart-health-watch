@@ -9,7 +9,7 @@
 #include "temperature_task.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "The_Artists_Garden_at_Eragny.c"
+// #include "The_Artists_Garden_at_Eragny.c"
 #include "gps_icon.c"
 #include "temp_icon.c"
 #include "heart_icon.c"
@@ -150,7 +150,7 @@ void ui_manager_init(ui_manager_t *ui)
     ui->scr_home = lv_obj_create(NULL);
 
     lv_obj_t *img_bg = lv_img_create(ui->scr_home);
-    lv_img_set_src(img_bg, &The_Artists_Garden_at_Eragny);
+    // lv_img_set_src(img_bg, &The_Artists_Garden_at_Eragny);
     lv_obj_align(img_bg, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_size(img_bg, 128, 160);
     lv_obj_clear_flag(img_bg, LV_OBJ_FLAG_CLICKABLE);

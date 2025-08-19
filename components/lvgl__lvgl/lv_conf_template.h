@@ -21,18 +21,18 @@
 /*=========================
    MEMORY SETTINGS
  *=========================*/
-#define LV_MEM_CUSTOM 0
-#define LV_MEM_SIZE (48U * 1024U)          // Use 48KB for better performance
+#define LV_MEM_CUSTOM 1
+#define LV_MEM_SIZE (16U * 1024U)     
 #define LV_MEM_ADR 0
-#define LV_MEM_BUF_MAX_NUM 16
+#define LV_MEM_BUF_MAX_NUM 8
 
 /*====================
    HAL SETTINGS
  *====================*/
-#define LV_DISP_DEF_REFR_PERIOD 100      
-#define LV_INDEV_DEF_READ_PERIOD 30
+#define LV_DISP_DEF_REFR_PERIOD 50  
+#define LV_INDEV_DEF_READ_PERIOD 50
 #define LV_TICK_CUSTOM 0                   // Let LVGL handle ticks
-#define LV_DPI_DEF 130
+#define LV_DPI_DEF 100
 
 /*====================
    FEATURE CONFIGURATION
@@ -40,13 +40,13 @@
 #define LV_DRAW_COMPLEX 1
 #define LV_SHADOW_CACHE_SIZE 0
 #define LV_CIRCLE_CACHE_SIZE 4
-#define LV_LAYER_SIMPLE_BUF_SIZE (8 * 1024)          // Reduced for ESP32
-#define LV_LAYER_SIMPLE_FALLBACK_BUF_SIZE (2 * 1024) // Reduced for ESP32
+#define LV_LAYER_SIMPLE_BUF_SIZE (4 * 1024)          // Reduced for ESP32
+#define LV_LAYER_SIMPLE_FALLBACK_BUF_SIZE (1 * 1024) // Reduced for ESP32
 #define LV_IMG_CACHE_DEF_SIZE 0
 #define LV_GRADIENT_MAX_STOPS 2
 #define LV_GRAD_CACHE_DEF_SIZE 0
 #define LV_DITHER_GRADIENT 0
-#define LV_DISP_ROT_MAX_BUF (2*1024)      // Reduced for ESP32
+#define LV_DISP_ROT_MAX_BUF (1024)      // Reduced for ESP32
 
 /*-------------
  * Logging - ENABLE for debugging
@@ -75,21 +75,21 @@
 /*==================
  * WIDGET USAGE  
  *================*/
-#define LV_USE_ARC 1
+#define LV_USE_ARC 0
 #define LV_USE_BAR 1
 #define LV_USE_BTN 1  
-#define LV_USE_BTNMATRIX 1
+#define LV_USE_BTNMATRIX 0
 #define LV_USE_CANVAS 0              // Disable to save memory
 #define LV_USE_CHECKBOX 1
-#define LV_USE_DROPDOWN 1
-#define LV_USE_IMG 1
+#define LV_USE_DROPDOWN 0
+#define LV_USE_IMG 0
 #define LV_USE_LABEL 1
 #define LV_USE_LINE 1
-#define LV_USE_ROLLER 1
-#define LV_USE_SLIDER 1
-#define LV_USE_SWITCH 1
-#define LV_USE_TEXTAREA 1
-#define LV_USE_TABLE 1
+#define LV_USE_ROLLER 0
+#define LV_USE_SLIDER 0
+#define LV_USE_SWITCH 0
+#define LV_USE_TEXTAREA 0
+#define LV_USE_TABLE 0
 #define LV_USE_LIST 1
 
 /*==================

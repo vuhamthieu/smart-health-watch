@@ -6,7 +6,6 @@ idf_component_register(
         mlx90614
         button
         i2c
-        u8g2
         gps
         health
         temperature
@@ -18,6 +17,6 @@ idf_component_register(
         mqttc
         bluetooth
     PRIV_REQUIRES freertos esp_common driver esp_lcd
-    EMBED_FILES "partitions.csv"    
+    # EMBED_FILES "partitions.csv"    
 )
 

@@ -211,11 +211,11 @@ void sensor_manager_task(void *pv)
                 }
 
                 // Send via Bluetooth
-                // if (bluetooth_is_connected())
-                // {
-                //     bluetooth_notify_temperature(t);
-                //     ESP_LOGI("SENSOR", "Temperature sent via BLE: %.2f", t);
-                // }
+                if (bluetooth_is_connected())
+                {
+                    bluetooth_notify_temperature(t);
+                    ESP_LOGI("SENSOR", "Temperature sent via BLE: %.2f", t);
+                }
 
                 loggedResult = true;
             }
@@ -254,11 +254,11 @@ void sensor_manager_task(void *pv)
                     }
 
                     // Send via Bluetooth
-                    // if (bluetooth_is_connected())
-                    // {
-                    //     bluetooth_notify_heart_rate(hd.heart_rate, hd.spo2);
-                    //     ESP_LOGI("SENSOR", "Health data sent via BLE: HR=%d, SpO2=%d", hd.heart_rate, hd.spo2);
-                    // }
+                    if (bluetooth_is_connected())
+                    {
+                        bluetooth_notify_heart_rate(hd.heart_rate, hd.spo2);
+                        ESP_LOGI("SENSOR", "Health data sent via BLE: HR=%d, SpO2=%d", hd.heart_rate, hd.spo2);
+                    }
                 }
 
                 ui_update_hr(&ui, hd.heart_rate, hd.spo2);
@@ -295,11 +295,11 @@ void sensor_manager_task(void *pv)
                     }
 
                     // Send via Bluetooth
-                    // if (bluetooth_is_connected())
-                    // {
-                    //     bluetooth_notify_gps(gps.latitude, gps.longitude);
-                    //     ESP_LOGI("SENSOR", "GPS data sent via BLE: %.6f, %.6f", gps.latitude, gps.longitude);
-                    // }
+                    if (bluetooth_is_connected())
+                    {
+                        bluetooth_notify_gps(gps.latitude, gps.longitude);
+                        ESP_LOGI("SENSOR", "GPS data sent via BLE: %.6f, %.6f", gps.latitude, gps.longitude);
+                    }
                 }
             }
             break;
@@ -367,15 +367,15 @@ void app_main(void)
     http_client_init();
 
     // Initialize Bluetooth
-    // esp_err_t ble_ret = bluetooth_init();
-    // if (ble_ret != ESP_OK)
-    // {
-    //     ESP_LOGE("MAIN", "Bluetooth init failed: %s", esp_err_to_name(ble_ret));
-    // }
-    // else
-    // {
-    //     ESP_LOGI("MAIN", "Bluetooth initialized successfully");
-    // }
+    esp_err_t ble_ret = bluetooth_init();
+    if (ble_ret != ESP_OK)
+    {
+        ESP_LOGE("MAIN", "Bluetooth init failed: %s", esp_err_to_name(ble_ret));
+    }
+    else
+    {
+        ESP_LOGI("MAIN", "Bluetooth initialized successfully");
+    }
 
     // Create synchronization objects
     ESP_LOGI("MAIN", "Creating synchronization objects...");
