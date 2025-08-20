@@ -16,6 +16,8 @@
 #include "data_icon.c"
 #include "notify_icon.c"
 #include "wifi.h"
+#include "bluetooth.h"
+
 
 static const char *TAG = "UI_MANAGER";
 
@@ -351,7 +353,21 @@ void ui_manager_init(ui_manager_t *ui)
 
     /* -------- BLUETOOTH ---------*/
     ui->scr_bluetooth = lv_obj_create(NULL);
+    lv_obj_t *bluetooth_container = lv_obj_create(ui->scr_bluetooth);
+    lv_obj_set_size(bluetooth_container, LV_PCT(85), 80);
+    lv_obj_set_style_bg_color(bluetooth_container, lv_color_hex(0x1a1a1a), LV_PART_MAIN);
+    lv_obj_set_style_border_color(bluetooth_container, lv_color_hex(0x2196F3), LV_PART_MAIN);
+    lv_obj_set_style_border_width(bluetooth_container, 2, LV_PART_MAIN);
+    lv_obj_set_style_radius(bluetooth_container, 10, LV_PART_MAIN);
+    lv_obj_center(bluetooth_container);
 
+    ui->lbl_bluetooth_status = lv_label_create(bluetooth_container);
+    lv_label_set_text(ui->lbl_bluetooth_status, bluetooth_is_connected() ? "BLUETOOTH: ON" : "BLUETOOTH: OFF");
+    lv_obj_set_style_text_align(ui->lbl_bluetooth_status, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_color(ui->lbl_bluetooth_status,
+                                bluetooth_is_connected() ? lv_color_hex(0x4CAF50) : lv_color_hex(0xFF5722),
+                                LV_PART_MAIN);
+    lv_obj_center(ui->lbl_bluetooth_status);
     /* Load home screen */
     ui->current_state = UI_STATE_HOME;
     lv_scr_load(ui->scr_home);
