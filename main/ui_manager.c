@@ -18,7 +18,6 @@
 #include "wifi.h"
 #include "bluetooth.h"
 
-
 static const char *TAG = "UI_MANAGER";
 
 static TickType_t last_button_time = 0;
@@ -122,6 +121,40 @@ void ui_update_home_wifi_icon(ui_manager_t *ui)
         {
             lv_obj_del(ui->lbl_wifi);
             ui->lbl_wifi = NULL;
+        }
+    }
+}
+
+void ui_update_bluetooth_status(ui_manager_t *ui)
+{
+    if (ui->lbl_bluetooth_status)
+    {
+        bool is_connected = bluetooth_is_connected();
+        lv_label_set_text(ui->lbl_bluetooth_status,
+                          is_connected ? "BLUETOOTH: CONNECTED" : "BLUETOOTH: DISCONNECTED");
+
+        lv_obj_set_style_text_color(ui->lbl_bluetooth_status,
+                                    is_connected ? lv_color_hex(0x4CAF50) : lv_color_hex(0xFF5722),
+                                    LV_PART_MAIN);
+    }
+
+    if (bluetooth_is_connected())
+    {
+        if (!ui->lbl_bluetooth)
+        {
+            ui->lbl_bluetooth = lv_label_create(ui->scr_home);
+            lv_obj_set_style_text_font(ui->lbl_bluetooth, &lv_font_montserrat_12, LV_PART_MAIN);
+            lv_label_set_text(ui->lbl_bluetooth, LV_SYMBOL_BLUETOOTH);
+            lv_obj_set_style_text_color(ui->lbl_bluetooth, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+            lv_obj_align(ui->lbl_bluetooth, LV_ALIGN_TOP_RIGHT, -20, 4);
+        }
+    }
+    else
+    {
+        if (ui->lbl_bluetooth)
+        {
+            lv_obj_del(ui->lbl_bluetooth);
+            ui->lbl_bluetooth = NULL;
         }
     }
 }
@@ -353,6 +386,7 @@ void ui_manager_init(ui_manager_t *ui)
 
     /* -------- BLUETOOTH ---------*/
     ui->scr_bluetooth = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(ui->scr_bluetooth, lv_color_black(), LV_PART_MAIN); 
     lv_obj_t *bluetooth_container = lv_obj_create(ui->scr_bluetooth);
     lv_obj_set_size(bluetooth_container, LV_PCT(85), 80);
     lv_obj_set_style_bg_color(bluetooth_container, lv_color_hex(0x1a1a1a), LV_PART_MAIN);
@@ -407,6 +441,27 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
     case UI_STATE_HOME:
         if (btn == BUTTON_SELECT)
         {
+            ui_switch(ui, UI_STATE_MENU);
+        }
+        break;
+    case UI_STATE_BLUETOOTH:
+        if (btn == BUTTON_SELECT)
+        {
+            if (bluetooth_is_connected())
+            {
+                ESP_LOGI("UI_MANAGER", "Disconnecting Bluetooth");
+                bluetooth_disconnect();
+            }
+            else
+            {
+                ESP_LOGI("UI_MANAGER", "Starting Bluetooth advertising");
+                bluetooth_start_advertising();
+            }
+            ui_update_bluetooth_status(ui);
+        }
+        else if (btn == BUTTON_BACK)
+        {
+            ESP_LOGI("UI_MANAGER", "Back to menu from Bluetooth");
             ui_switch(ui, UI_STATE_MENU);
         }
         break;
@@ -580,6 +635,10 @@ void ui_switch(ui_manager_t *ui, ui_state_t new_state)
     case UI_STATE_DATA:
         target = ui->scr_data;
         ui_update_dashboard(ui);
+        break;
+    case UI_STATE_BLUETOOTH:
+        target = ui->scr_bluetooth;
+        ui_update_bluetooth_status(ui); 
         break;
     default:
         ESP_LOGE("UI_MANAGER", "Unknown UI state: %d", new_state);

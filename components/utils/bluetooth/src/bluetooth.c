@@ -13,9 +13,11 @@ static const char *TAG = "BLE_HEALTH";
 static bool s_ble_connected = false;
 static uint16_t s_conn_id = 0;
 static uint16_t s_gatts_if = 0;
+static esp_bd_addr_t s_peer_addr = {0};
 
 // Attribute table
-enum {
+enum
+{
     HEALTH_IDX_SVC,
 
     HEALTH_IDX_HR_CHAR,
@@ -140,14 +142,18 @@ static const esp_gatts_attr_db_t gatt_db[HEALTH_IDX_NB] = {
 
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
-    switch (event) {
+    switch (event)
+    {
     case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
         esp_ble_gap_start_advertising(&s_adv_params);
         break;
     case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
-        if (param->adv_start_cmpl.status != ESP_BT_STATUS_SUCCESS) {
+        if (param->adv_start_cmpl.status != ESP_BT_STATUS_SUCCESS)
+        {
             ESP_LOGE(TAG, "Advertising start failed");
-        } else {
+        }
+        else
+        {
             ESP_LOGI(TAG, "Advertising started - Device name: Health Monitor");
         }
         break;
@@ -161,7 +167,8 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
 static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param)
 {
-    switch (event) {
+    switch (event)
+    {
     case ESP_GATTS_REG_EVT:
         ESP_LOGI(TAG, "REGISTER_APP_EVT, status %d, app_id %d", param->reg.status, param->reg.app_id);
         s_gatts_if = gatts_if;
@@ -171,11 +178,16 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
         break;
 
     case ESP_GATTS_CREAT_ATTR_TAB_EVT:
-        if (param->add_attr_tab.status != ESP_GATT_OK) {
+        if (param->add_attr_tab.status != ESP_GATT_OK)
+        {
             ESP_LOGE(TAG, "Create attribute table failed, error code=0x%x", param->add_attr_tab.status);
-        } else if (param->add_attr_tab.num_handle != HEALTH_IDX_NB) {
+        }
+        else if (param->add_attr_tab.num_handle != HEALTH_IDX_NB)
+        {
             ESP_LOGE(TAG, "Create attribute table abnormally, num_handle (%d) doesn't equal to HEALTH_IDX_NB(%d)", param->add_attr_tab.num_handle, HEALTH_IDX_NB);
-        } else {
+        }
+        else
+        {
             ESP_LOGI(TAG, "Create attribute table successfully, the number handle = %d", param->add_attr_tab.num_handle);
             memcpy(s_handle_table, param->add_attr_tab.handles, sizeof(s_handle_table));
             esp_ble_gatts_start_service(s_handle_table[HEALTH_IDX_SVC]);
@@ -186,21 +198,30 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
         ESP_LOGI(TAG, "ESP_GATTS_CONNECT_EVT, conn_id = %d", param->connect.conn_id);
         s_conn_id = param->connect.conn_id;
         s_ble_connected = true;
+        memcpy(s_peer_addr, param->connect.remote_bda, ESP_BD_ADDR_LEN);
+        ESP_LOGI(TAG, "Connected to: %02X:%02X:%02X:%02X:%02X:%02X",
+                 s_peer_addr[0], s_peer_addr[1], s_peer_addr[2],
+                 s_peer_addr[3], s_peer_addr[4], s_peer_addr[5]);
         esp_ble_gap_stop_advertising();
         break;
 
     case ESP_GATTS_DISCONNECT_EVT:
         ESP_LOGI(TAG, "ESP_GATTS_DISCONNECT_EVT, reason = 0x%x", param->disconnect.reason);
         s_ble_connected = false;
+        s_conn_id = 0;
+        memset(s_peer_addr, 0, ESP_BD_ADDR_LEN);
         esp_ble_gap_start_advertising(&s_adv_params);
         break;
 
     case ESP_GATTS_WRITE_EVT:
         ESP_LOGI(TAG, "GATT_WRITE_EVT, handle = %d, value len = %d", param->write.handle, param->write.len);
-        if (param->write.handle == s_handle_table[HEALTH_IDX_CMD_VAL]) {
+        if (param->write.handle == s_handle_table[HEALTH_IDX_CMD_VAL])
+        {
             ESP_LOGI(TAG, "Command received: %.*s", param->write.len, param->write.value);
             // Handle commands here (e.g., change sampling rate, calibrate, etc.)
-        } else if (param->write.handle == s_handle_table[HEALTH_IDX_NOTIFY_VAL]) {
+        }
+        else if (param->write.handle == s_handle_table[HEALTH_IDX_NOTIFY_VAL])
+        {
             ESP_LOGI(TAG, "Notification received from phone: %.*s", param->write.len, param->write.value);
             // Handle phone notifications here (display on watch screen)
         }
@@ -221,43 +242,50 @@ esp_err_t bluetooth_init(void)
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     ret = esp_bt_controller_init(&bt_cfg);
-    if (ret) {
+    if (ret)
+    {
         ESP_LOGE(TAG, "%s enable controller failed: %s", __func__, esp_err_to_name(ret));
         return ret;
     }
 
     ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
-    if (ret) {
+    if (ret)
+    {
         ESP_LOGE(TAG, "%s enable controller failed: %s", __func__, esp_err_to_name(ret));
         return ret;
-    }   
+    }
 
     ret = esp_bluedroid_init();
-    if (ret) {
+    if (ret)
+    {
         ESP_LOGE(TAG, "%s init bluetooth failed: %s", __func__, esp_err_to_name(ret));
         return ret;
     }
 
     ret = esp_bluedroid_enable();
-    if (ret) {
+    if (ret)
+    {
         ESP_LOGE(TAG, "%s enable bluetooth failed: %s", __func__, esp_err_to_name(ret));
         return ret;
     }
 
     ret = esp_ble_gatts_register_callback(gatts_event_handler);
-    if (ret) {
+    if (ret)
+    {
         ESP_LOGE(TAG, "gatts register error, error code = %x", ret);
         return ret;
     }
 
     ret = esp_ble_gap_register_callback(gap_event_handler);
-    if (ret) {
+    if (ret)
+    {
         ESP_LOGE(TAG, "gap register error, error code = %x", ret);
         return ret;
     }
 
     ret = esp_ble_gatts_app_register(0);
-    if (ret) {
+    if (ret)
+    {
         ESP_LOGE(TAG, "gatts app register error, error code = %x", ret);
         return ret;
     }
@@ -278,7 +306,8 @@ esp_err_t bluetooth_stop_advertising(void)
 
 esp_err_t bluetooth_notify_heart_rate(uint16_t hr, uint8_t spo2)
 {
-    if (!s_ble_connected) {
+    if (!s_ble_connected)
+    {
         return ESP_ERR_INVALID_STATE;
     }
 
@@ -294,12 +323,14 @@ esp_err_t bluetooth_notify_heart_rate(uint16_t hr, uint8_t spo2)
 
 esp_err_t bluetooth_notify_temperature(float temp)
 {
-    if (!s_ble_connected) {
+    if (!s_ble_connected)
+    {
         return ESP_ERR_INVALID_STATE;
     }
 
     // Convert float to bytes (IEEE 754)
-    union {
+    union
+    {
         float f;
         uint8_t bytes[4];
     } temp_union;
@@ -311,13 +342,16 @@ esp_err_t bluetooth_notify_temperature(float temp)
 
 esp_err_t bluetooth_notify_gps(float lat, float lon)
 {
-    if (!s_ble_connected) {
+    if (!s_ble_connected)
+    {
         return ESP_ERR_INVALID_STATE;
     }
 
     // Pack lat/lon as 2 floats (8 bytes total)
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             float lat;
             float lon;
         } coords;
@@ -330,9 +364,10 @@ esp_err_t bluetooth_notify_gps(float lat, float lon)
                                        8, gps_union.bytes, false);
 }
 
-esp_err_t bluetooth_send_notification(const char* title, const char* message)
+esp_err_t bluetooth_send_notification(const char *title, const char *message)
 {
-    if (!s_ble_connected) {
+    if (!s_ble_connected)
+    {
         return ESP_ERR_INVALID_STATE;
     }
 
@@ -341,10 +376,29 @@ esp_err_t bluetooth_send_notification(const char* title, const char* message)
     snprintf(notification_data, sizeof(notification_data), "%s|%s", title, message);
 
     return esp_ble_gatts_send_indicate(s_gatts_if, s_conn_id, s_handle_table[HEALTH_IDX_NOTIFY_VAL],
-                                       strlen(notification_data), (uint8_t*)notification_data, false);
+                                       strlen(notification_data), (uint8_t *)notification_data, false);
 }
 
 bool bluetooth_is_connected(void)
 {
     return s_ble_connected;
+}
+
+esp_err_t bluetooth_disconnect(void)
+{
+    if (!s_ble_connected) {
+        ESP_LOGW(TAG, "Not connected, nothing to disconnect");
+        return ESP_ERR_INVALID_STATE;
+    }
+    
+    ESP_LOGI(TAG, "Disconnecting Bluetooth connection");
+    
+    // Use peer address instead of conn_id
+    esp_err_t ret = esp_ble_gap_disconnect(s_peer_addr);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to disconnect: %s", esp_err_to_name(ret));
+        return ret;
+    }
+    
+    return ESP_OK;
 }
