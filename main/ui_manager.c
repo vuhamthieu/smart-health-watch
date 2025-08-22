@@ -125,19 +125,8 @@ void ui_update_home_wifi_icon(ui_manager_t *ui)
     }
 }
 
-void ui_update_bluetooth_status(ui_manager_t *ui)
+void ui_update_home_bluetooth_icon(ui_manager_t *ui)
 {
-    if (ui->lbl_bluetooth_status)
-    {
-        bool is_connected = bluetooth_is_connected();
-        lv_label_set_text(ui->lbl_bluetooth_status,
-                          is_connected ? "BLUETOOTH: CONNECTED" : "BLUETOOTH: DISCONNECTED");
-
-        lv_obj_set_style_text_color(ui->lbl_bluetooth_status,
-                                    is_connected ? lv_color_hex(0x4CAF50) : lv_color_hex(0xFF5722),
-                                    LV_PART_MAIN);
-    }
-
     if (bluetooth_is_connected())
     {
         if (!ui->lbl_bluetooth)
@@ -147,6 +136,7 @@ void ui_update_bluetooth_status(ui_manager_t *ui)
             lv_label_set_text(ui->lbl_bluetooth, LV_SYMBOL_BLUETOOTH);
             lv_obj_set_style_text_color(ui->lbl_bluetooth, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
             lv_obj_align(ui->lbl_bluetooth, LV_ALIGN_TOP_RIGHT, -20, 4);
+            ESP_LOGI("UI_MANAGER", "Bluetooth icon created on home screen");
         }
     }
     else
@@ -155,8 +145,23 @@ void ui_update_bluetooth_status(ui_manager_t *ui)
         {
             lv_obj_del(ui->lbl_bluetooth);
             ui->lbl_bluetooth = NULL;
+            ESP_LOGI("UI_MANAGER", "Bluetooth icon removed from home screen");
         }
     }
+}
+
+void ui_update_bluetooth_status(ui_manager_t *ui)
+{
+    if (ui->lbl_bluetooth_status)
+    {
+        bool is_connected = bluetooth_is_connected();
+        lv_label_set_text(ui->lbl_bluetooth_status,
+                          is_connected ? "Bluetooth: ON" : "Bluetooth: OFF");
+        lv_obj_set_style_text_color(ui->lbl_bluetooth_status,
+                                    is_connected ? lv_color_hex(0x4CAF50) : lv_color_hex(0xFF5722),
+                                    LV_PART_MAIN);
+    }
+    ui_update_home_bluetooth_icon(ui); 
 }
 
 void ui_manager_init(ui_manager_t *ui)
