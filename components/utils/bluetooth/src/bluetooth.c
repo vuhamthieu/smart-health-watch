@@ -15,6 +15,9 @@ static uint16_t s_conn_id = 0;
 static uint16_t s_gatts_if = 0;
 static esp_bd_addr_t s_peer_addr = {0};
 
+// Advertising state
+static bool s_ble_advertising = false;
+
 // Attribute table
 enum
 {
@@ -142,24 +145,34 @@ static const esp_gatts_attr_db_t gatt_db[HEALTH_IDX_NB] = {
 
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
+    ESP_LOGI(TAG, "GAP Event: %d", event);
+    
     switch (event)
     {
     case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
+        ESP_LOGI(TAG, "Advertising data set complete, starting advertising...");
         esp_ble_gap_start_advertising(&s_adv_params);
         break;
+        
     case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
+        ESP_LOGI(TAG, "Advertising start result: status=%d", param->adv_start_cmpl.status);
         if (param->adv_start_cmpl.status != ESP_BT_STATUS_SUCCESS)
         {
-            ESP_LOGE(TAG, "Advertising start failed");
+            ESP_LOGE(TAG, "Advertising start failed with status: %d", param->adv_start_cmpl.status);
+            s_ble_advertising = false;
         }
         else
         {
-            ESP_LOGI(TAG, "Advertising started - Device name: Health Monitor");
+            ESP_LOGI(TAG, "Advertising started successfully! Device 'Health Monitor' is now discoverable");
+            s_ble_advertising = true;
         }
         break;
+        
     case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT:
         ESP_LOGI(TAG, "Advertising stopped");
+        s_ble_advertising = false;
         break;
+        
     default:
         break;
     }
@@ -172,7 +185,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
     case ESP_GATTS_REG_EVT:
         ESP_LOGI(TAG, "REGISTER_APP_EVT, status %d, app_id %d", param->reg.status, param->reg.app_id);
         s_gatts_if = gatts_if;
-        esp_ble_gap_set_device_name("Health Monitor");
+        esp_ble_gap_set_device_name("ESP32");
         esp_ble_gap_config_adv_data(&s_adv_data);
         esp_ble_gatts_create_attr_tab(gatt_db, gatts_if, HEALTH_IDX_NB, 0);
         break;
@@ -296,11 +309,26 @@ esp_err_t bluetooth_init(void)
 
 esp_err_t bluetooth_start_advertising(void)
 {
-    return esp_ble_gap_start_advertising(&s_adv_params);
+    if (s_ble_advertising) {
+        ESP_LOGW(TAG, "Already advertising");
+        return ESP_OK;
+    }
+    
+    ESP_LOGI(TAG, "Starting BLE advertising...");
+    esp_err_t ret = esp_ble_gap_start_advertising(&s_adv_params);
+    
+    if (ret == ESP_OK) {
+        ESP_LOGI(TAG, "Advertising start command sent successfully");
+    } else {
+        ESP_LOGE(TAG, "Failed to start advertising: %s", esp_err_to_name(ret));
+    }
+    
+    return ret;
 }
 
 esp_err_t bluetooth_stop_advertising(void)
 {
+    s_ble_advertising = false;
     return esp_ble_gap_stop_advertising();
 }
 
@@ -384,6 +412,11 @@ bool bluetooth_is_connected(void)
     return s_ble_connected;
 }
 
+bool bluetooth_is_advertising(void)
+{
+    return s_ble_advertising;
+}
+
 esp_err_t bluetooth_disconnect(void)
 {
     if (!s_ble_connected) {
@@ -402,3 +435,5 @@ esp_err_t bluetooth_disconnect(void)
     
     return ESP_OK;
 }
+
+

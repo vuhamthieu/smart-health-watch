@@ -69,23 +69,6 @@ bool health_get_data_protected(health_data_t *health_data)
     return success;
 }
 
-bool gps_get_data_protected(gps_data_t *gps_data)
-{
-    bool success = false;
-    if (xSemaphoreTake(i2c_mutex, pdMS_TO_TICKS(500)) == pdTRUE)
-    {
-        gps_get_data(gps_data);
-        success = true;
-        xSemaphoreGive(i2c_mutex);
-        // ESP_LOGI("GPS", "Protected read: %.6f, %.6f",
-        //          gps_data->latitude, gps_data->longitude);
-    }
-    else
-    {
-        ESP_LOGW("GPS", "Failed to acquire I2C mutex for GPS");
-    }
-    return success;
-}
 
 void temperature_update_protected()
 {
@@ -266,45 +249,6 @@ void sensor_manager_task(void *pv)
             break;
         }
 
-        case UI_STATE_GPS:
-        {
-            gps_data_t gps = {0};
-            if (gps_get_data_protected(&gps)) // Use protected version
-            {
-                ui_update_gps(&ui, gps.latitude, gps.longitude, gps.valid);
-
-                if (gps.valid && (current_time - last_http_send >= HTTP_SEND_INTERVAL))
-                {
-                    // Queue HTTP request
-                    if (is_wifi_connected())
-                    {
-                        http_message_t msg = {
-                            .data_type = 2,
-                            .data.gps = {gps.latitude, gps.longitude}};
-
-                        if (xQueueSend(http_queue, &msg, 0) == pdTRUE)
-                        {
-                            ESP_LOGI("SENSOR", "GPS data queued: %.6f, %.6f",
-                                     gps.latitude, gps.longitude);
-                            last_http_send = current_time;
-                        }
-                        else
-                        {
-                            ESP_LOGW("SENSOR", "HTTP queue full, skipping GPS send");
-                        }
-                    }
-
-                    // Send via Bluetooth
-                    if (bluetooth_is_connected())
-                    {
-                        bluetooth_notify_gps(gps.latitude, gps.longitude);
-                        ESP_LOGI("SENSOR", "GPS data sent via BLE: %.6f, %.6f", gps.latitude, gps.longitude);
-                    }
-                }
-            }
-            break;
-        }
-
         case UI_STATE_HOME:
         case UI_STATE_MENU:
         case UI_STATE_WIFI:
@@ -324,6 +268,7 @@ void sensor_manager_task(void *pv)
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
+
 
 void app_main(void)
 {
@@ -361,13 +306,13 @@ void app_main(void)
     }
 
     vTaskDelay(pdMS_TO_TICKS(1000));
-    gps_init();
     temperature_init();
     health_init();
     http_client_init();
 
     // Initialize Bluetooth
     esp_err_t ble_ret = bluetooth_init();
+    
     if (ble_ret != ESP_OK)
     {
         ESP_LOGE("MAIN", "Bluetooth init failed: %s", esp_err_to_name(ble_ret));
@@ -375,6 +320,18 @@ void app_main(void)
     else
     {
         ESP_LOGI("MAIN", "Bluetooth initialized successfully");
+
+        vTaskDelay(pdMS_TO_TICKS(2000));
+
+        esp_err_t adv_ret = bluetooth_start_advertising();
+        if (adv_ret != ESP_OK)
+        {
+            ESP_LOGE("MAIN", "Failed to start advertising: %s", esp_err_to_name(adv_ret));
+        }
+        else
+        {
+            ESP_LOGI("MAIN", "Bluetooth advertising started - Device discoverable as 'Health Monitor'");
+        }
     }
 
     // Create synchronization objects

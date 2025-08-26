@@ -36,6 +36,7 @@ typedef enum
     UI_STATE_HR,
     UI_STATE_GPS,
     UI_STATE_DATA,
+    UI_STATE_SETTING,
     UI_STATE_WIFI,
     UI_STATE_BLUETOOTH
 } ui_state_t;
@@ -64,6 +65,7 @@ typedef struct
     lv_obj_t *scr_bluetooth;
     lv_obj_t *scr_notify;
     lv_obj_t *scr_data;
+    lv_obj_t *scr_settings;
 
     /* Common widgets */
     lv_obj_t *lbl_battery;
@@ -73,9 +75,23 @@ typedef struct
     lv_obj_t *lbl_hr_dashboard;
     lv_obj_t *lbl_spo2_dashboard;
     lv_obj_t *lbl_temp_dashboard;
+    lv_obj_t *lbl_time;
+    lv_obj_t *battery_container;
+    lv_obj_t *lbl_battery_icon;
+    lv_obj_t *lbl_battery_fill;
+    lv_obj_t *lbl_battery_percent;
+    lv_obj_t *lbl_time_menu, *lbl_battery_percent_menu, *lbl_battery_icon_menu;
+    lv_obj_t *lbl_time_notify, *lbl_battery_percent_notify, *lbl_battery_icon_notify;
+    lv_obj_t *lbl_time_temp, *lbl_battery_percent_temp, *lbl_battery_icon_temp;
+    lv_obj_t *lbl_time_hr, *lbl_battery_percent_hr, *lbl_battery_icon_hr;
+    lv_obj_t *lbl_time_data, *lbl_battery_percent_data, *lbl_battery_icon_data;
+    lv_obj_t *lbl_time_settings, *lbl_battery_percent_settings, *lbl_battery_icon_settings;
+    lv_obj_t *lbl_time_wifi, *lbl_battery_percent_wifi, *lbl_battery_icon_wifi;
+    lv_obj_t *lbl_time_bluetooth, *lbl_battery_percent_bluetooth, *lbl_battery_icon_bluetooth;
 
-    lv_obj_t *bar_temp; 
-    lv_obj_t *bar_hr;  
+
+    lv_obj_t *bar_temp;
+    lv_obj_t *bar_hr;
     lv_obj_t *bar_spo2;
 
     /* Status for wifi and bluetooth*/
@@ -88,10 +104,12 @@ typedef struct
 
     /* Menu (single lv_list) */
     lv_obj_t *list_menu;
+    lv_obj_t *list_settings;
     /* Menu data */
     menu_item_t menu_items[10];
     int menu_item_count;
     int selected_index;
+    int settings_selected_index;
 
     /* Temp screen */
     lv_obj_t *lbl_temp;
@@ -138,3 +156,7 @@ void ui_update_home_bluetooth_icon(ui_manager_t *ui);
 void ui_update_bluetooth_status(ui_manager_t *ui);
 
 void ui_update_dashboard(ui_manager_t *ui);
+
+void ui_create_status_bar(lv_obj_t *screen, lv_obj_t **time_label, lv_obj_t **battery_percent, lv_obj_t **battery_icon);
+
+void ui_update_all_status_bars(ui_manager_t *ui, const char *time_str, int battery_percent);

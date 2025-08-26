@@ -27,6 +27,7 @@
     "temperature_task.h": "c",
     "lvgl_helpers.h": "c",
     "cstdlib": "c",
-    "cstdint": "c"
+    "cstdint": "c",
+    "gps_tracker.h": "c"
   }
 }
