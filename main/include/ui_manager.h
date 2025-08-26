@@ -80,6 +80,15 @@ typedef struct
     lv_obj_t *lbl_battery_icon;
     lv_obj_t *lbl_battery_fill;
     lv_obj_t *lbl_battery_percent;
+    lv_obj_t *lbl_time_menu, *lbl_battery_percent_menu, *lbl_battery_icon_menu;
+    lv_obj_t *lbl_time_notify, *lbl_battery_percent_notify, *lbl_battery_icon_notify;
+    lv_obj_t *lbl_time_temp, *lbl_battery_percent_temp, *lbl_battery_icon_temp;
+    lv_obj_t *lbl_time_hr, *lbl_battery_percent_hr, *lbl_battery_icon_hr;
+    lv_obj_t *lbl_time_data, *lbl_battery_percent_data, *lbl_battery_icon_data;
+    lv_obj_t *lbl_time_settings, *lbl_battery_percent_settings, *lbl_battery_icon_settings;
+    lv_obj_t *lbl_time_wifi, *lbl_battery_percent_wifi, *lbl_battery_icon_wifi;
+    lv_obj_t *lbl_time_bluetooth, *lbl_battery_percent_bluetooth, *lbl_battery_icon_bluetooth;
+
 
     lv_obj_t *bar_temp;
     lv_obj_t *bar_hr;
@@ -147,3 +156,7 @@ void ui_update_home_bluetooth_icon(ui_manager_t *ui);
 void ui_update_bluetooth_status(ui_manager_t *ui);
 
 void ui_update_dashboard(ui_manager_t *ui);
+
+void ui_create_status_bar(lv_obj_t *screen, lv_obj_t **time_label, lv_obj_t **battery_percent, lv_obj_t **battery_icon);
+
+void ui_update_all_status_bars(ui_manager_t *ui, const char *time_str, int battery_percent);

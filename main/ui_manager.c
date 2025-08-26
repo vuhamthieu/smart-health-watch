@@ -58,9 +58,11 @@ void ui_create_menu(ui_manager_t *ui)
     ui->scr_menu = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_menu, lv_color_black(), LV_PART_MAIN);
 
+    ui_create_status_bar(ui->scr_menu, &ui->lbl_time_menu, &ui->lbl_battery_percent_menu, &ui->lbl_battery_icon_menu);
+
     ui->list_menu = lv_obj_create(ui->scr_menu);
-    lv_obj_set_size(ui->list_menu, 128, 160);
-    lv_obj_set_pos(ui->list_menu, 0, 0);
+    lv_obj_set_size(ui->list_menu, 128, 135);
+    lv_obj_set_pos(ui->list_menu, 0, 25);
     lv_obj_set_style_bg_opa(ui->list_menu, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_style_border_width(ui->list_menu, 0, LV_PART_MAIN);
     lv_obj_set_style_pad_all(ui->list_menu, 8, LV_PART_MAIN);
@@ -68,10 +70,12 @@ void ui_create_menu(ui_manager_t *ui)
     lv_obj_clear_flag(ui->list_menu, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_scroll_dir(ui->list_menu, LV_DIR_NONE);
 
+     lv_obj_set_style_border_width(ui->list_menu, 0, LV_PART_SCROLLBAR);
+
     lv_obj_set_flex_flow(ui->list_menu, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(ui->list_menu, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    int item_height = 20;
+    int item_height = 15;
 
     static lv_style_t style_menu_item;
     lv_style_init(&style_menu_item);
@@ -86,7 +90,7 @@ void ui_create_menu(ui_manager_t *ui)
     {
         // Create container for each menu item
         lv_obj_t *item_container = lv_obj_create(ui->list_menu);
-        lv_obj_set_size(item_container, LV_PCT(95), item_height);
+        lv_obj_set_size(item_container, LV_PCT(100), item_height);
         lv_obj_add_style(item_container, &style_menu_item, 0);
         lv_obj_set_style_bg_opa(item_container, LV_OPA_TRANSP, LV_PART_MAIN);
         lv_obj_set_style_border_width(item_container, 0, LV_PART_MAIN);
@@ -118,14 +122,16 @@ void ui_create_settings_menu(ui_manager_t *ui)
     ui->scr_settings = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_settings, lv_color_black(), LV_PART_MAIN);
 
+    ui_create_status_bar(ui->scr_settings, &ui->lbl_time_settings, &ui->lbl_battery_percent_settings, &ui->lbl_battery_icon_settings);
+
     lv_obj_t *lbl_settings_title = lv_label_create(ui->scr_settings);
     lv_label_set_text(lbl_settings_title, "Settings");
     // lv_obj_set_style_text_color(lbl_settings_title, lv_color_hex(0x2196F3), LV_PART_MAIN);
-    lv_obj_align(lbl_settings_title, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_align(lbl_settings_title, LV_ALIGN_TOP_MID, 0, 25);
 
     ui->list_settings = lv_obj_create(ui->scr_settings);
-    lv_obj_set_size(ui->list_settings, 128, 130);
-    lv_obj_set_pos(ui->list_settings, 0, 30);
+    lv_obj_set_size(ui->list_settings, 128, 110);
+    lv_obj_set_pos(ui->list_settings, 0, 45);
     lv_obj_set_style_bg_opa(ui->list_settings, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_style_border_width(ui->list_settings, 0, LV_PART_MAIN);
     lv_obj_set_style_pad_all(ui->list_settings, 8, LV_PART_MAIN);
@@ -136,7 +142,7 @@ void ui_create_settings_menu(ui_manager_t *ui)
     lv_obj_set_flex_flow(ui->list_settings, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(ui->list_settings, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    int item_height = 20;
+    int item_height = 15;
 
     static lv_style_t style_menu_item;
     lv_style_init(&style_menu_item);
@@ -144,14 +150,14 @@ void ui_create_settings_menu(ui_manager_t *ui)
     lv_style_set_border_width(&style_menu_item, 0);
     lv_style_set_pad_left(&style_menu_item, 6);
     lv_style_set_pad_right(&style_menu_item, 6);
-    lv_style_set_pad_top(&style_menu_item, 3);
-    lv_style_set_pad_bottom(&style_menu_item, 3);
+    lv_style_set_pad_top(&style_menu_item, 2);
+    lv_style_set_pad_bottom(&style_menu_item, 2);
 
     for (int i = 0; i < 2; i++)
     {
         // Create container for each settings menu item
         lv_obj_t *item_container = lv_obj_create(ui->list_settings);
-        lv_obj_set_size(item_container, LV_PCT(95), item_height);
+        lv_obj_set_size(item_container, LV_PCT(100), item_height);
         lv_obj_add_style(item_container, &style_menu_item, 0);
         lv_obj_set_style_bg_opa(item_container, LV_OPA_TRANSP, LV_PART_MAIN);
         lv_obj_set_style_border_width(item_container, 0, LV_PART_MAIN);
@@ -341,23 +347,26 @@ void ui_manager_init(ui_manager_t *ui)
 
     /* ---------- Notifications ---------- */
     ui->scr_notify = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(ui->scr_notify, lv_color_black(), LV_PART_MAIN);
+    ui_create_status_bar(ui->scr_notify, &ui->lbl_time_notify, &ui->lbl_battery_percent_notify, &ui->lbl_battery_icon_notify);
 
     /* ---------- DASHBOARD - Modern Clean Style ----------*/
     ui->scr_data = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_data, lv_color_black(), LV_PART_MAIN);
+    ui_create_status_bar(ui->scr_data, &ui->lbl_time_data, &ui->lbl_battery_percent_data, &ui->lbl_battery_icon_data);
 
     lv_obj_t *lbl_data_title = lv_label_create(ui->scr_data);
     lv_label_set_text(lbl_data_title, "Dashboard");
     lv_obj_set_style_text_color(lbl_data_title, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
     lv_obj_set_style_text_font(lbl_data_title, &lv_font_montserrat_14, LV_PART_MAIN);
-    lv_obj_align(lbl_data_title, LV_ALIGN_TOP_MID, 0, 8);
+    lv_obj_align(lbl_data_title, LV_ALIGN_TOP_MID, 0, 25);
 
     // Temperature bar (directly on screen, no container)
     ui->bar_temp = lv_bar_create(ui->scr_data);
     lv_obj_set_size(ui->bar_temp, 100, 8);
     lv_bar_set_range(ui->bar_temp, 0, 50);
     lv_bar_set_value(ui->bar_temp, 0, LV_ANIM_OFF);
-    lv_obj_align(ui->bar_temp, LV_ALIGN_TOP_MID, 0, 35);
+    lv_obj_align(ui->bar_temp, LV_ALIGN_TOP_MID, 0, 50);
     static lv_style_t bar_style_temp;
     lv_style_init(&bar_style_temp);
     lv_style_set_bg_color(&bar_style_temp, lv_color_hex(0x2a2a2a));
@@ -415,13 +424,14 @@ void ui_manager_init(ui_manager_t *ui)
     /* ---------- TEMPERATURE - Professional Dark ---------- */
     ui->scr_temp = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_temp, lv_color_black(), LV_PART_MAIN);
+    ui_create_status_bar(ui->scr_temp, &ui->lbl_time_temp, &ui->lbl_battery_percent_temp, &ui->lbl_battery_icon_temp);
 
     // Title
     lv_obj_t *lbl_temp_title = lv_label_create(ui->scr_temp);
     lv_label_set_text(lbl_temp_title, "Temperature");
     lv_obj_set_style_text_color(lbl_temp_title, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(lbl_temp_title, &lv_font_montserrat_14, LV_PART_MAIN);
-    lv_obj_align(lbl_temp_title, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_align(lbl_temp_title, LV_ALIGN_TOP_MID, 0, 25);
 
     // Content area - simplified
     ui->lbl_temp = lv_label_create(ui->scr_temp);
@@ -429,43 +439,45 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_align(ui->lbl_temp, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(ui->lbl_temp, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(ui->lbl_temp, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_obj_center(ui->lbl_temp);
+    lv_obj_align(ui->lbl_temp, LV_ALIGN_CENTER, 0, 10); 
 
     /* ---------- HEART RATE - Clean Black & White ---------- */
     ui->scr_hr = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_hr, lv_color_black(), LV_PART_MAIN);
+    ui_create_status_bar(ui->scr_hr, &ui->lbl_time_hr, &ui->lbl_battery_percent_hr, &ui->lbl_battery_icon_hr);
 
     // Title
     lv_obj_t *lbl_hr_title = lv_label_create(ui->scr_hr);
     lv_label_set_text(lbl_hr_title, "Heart rate");
     lv_obj_set_style_text_color(lbl_hr_title, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(lbl_hr_title, &lv_font_montserrat_14, LV_PART_MAIN);
-    lv_obj_align(lbl_hr_title, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_align(lbl_hr_title, LV_ALIGN_TOP_MID, 0, 25);
 
     // HR display
     ui->lbl_hr = lv_label_create(ui->scr_hr);
     lv_label_set_text(ui->lbl_hr, "HR: -- bpm");
     lv_obj_set_style_text_color(ui->lbl_hr, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(ui->lbl_hr, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_obj_align(ui->lbl_hr, LV_ALIGN_CENTER, 0, -15);
+    lv_obj_align(ui->lbl_hr, LV_ALIGN_CENTER, 0, -5);
 
     // SpO2 display
     ui->lbl_spo2 = lv_label_create(ui->scr_hr);
     lv_label_set_text(ui->lbl_spo2, "SpO2: --%");
     lv_obj_set_style_text_color(ui->lbl_spo2, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(ui->lbl_spo2, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_obj_align(ui->lbl_spo2, LV_ALIGN_CENTER, 0, 5);
+    lv_obj_align(ui->lbl_spo2, LV_ALIGN_CENTER, 0, 15);
 
     /* -------- WIFI - Clean Black & White --------- */
     ui->scr_wifi = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_wifi, lv_color_black(), LV_PART_MAIN);
+    ui_create_status_bar(ui->scr_wifi, &ui->lbl_time_wifi, &ui->lbl_battery_percent_wifi, &ui->lbl_battery_icon_wifi);
 
     // TITLE
     lv_obj_t *lbl_wifi_title = lv_label_create(ui->scr_wifi);
     lv_label_set_text(lbl_wifi_title, "Wifi setting");
     lv_obj_set_style_text_color(lbl_wifi_title, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(lbl_wifi_title, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_obj_align(lbl_wifi_title, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_align(lbl_wifi_title, LV_ALIGN_TOP_MID, 0, 25);
 
     // WiFi status
     ui->lbl_wifi_status = lv_label_create(ui->scr_wifi);
@@ -486,13 +498,14 @@ void ui_manager_init(ui_manager_t *ui)
     /* -------- BLUETOOTH - Clean Black & White ---------*/
     ui->scr_bluetooth = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_bluetooth, lv_color_black(), LV_PART_MAIN);
+     ui_create_status_bar(ui->scr_bluetooth, &ui->lbl_time_bluetooth, &ui->lbl_battery_percent_bluetooth, &ui->lbl_battery_icon_bluetooth);
 
     // Title
     lv_obj_t *lbl_bluetooth_title = lv_label_create(ui->scr_bluetooth);
     lv_label_set_text(lbl_bluetooth_title, "Bluetooth setting");
     lv_obj_set_style_text_color(lbl_bluetooth_title, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(lbl_bluetooth_title, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_obj_align(lbl_bluetooth_title, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_align(lbl_bluetooth_title, LV_ALIGN_TOP_MID, 0, 25);
 
     // Bluetooth status
     ui->lbl_bluetooth_status = lv_label_create(ui->scr_bluetooth);
@@ -961,4 +974,141 @@ void ui_update_dashboard(ui_manager_t *ui)
         lv_label_set_text(ui->lbl_spo2_dashboard, "SpO2: --%");
         lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
     }
+}
+
+void ui_update_all_status_bars(ui_manager_t *ui, const char *time_str, int battery_percent)
+{
+    // Update home screen (existing)
+    if (ui->lbl_time) {
+        lv_label_set_text(ui->lbl_time, time_str);
+    }
+    if (ui->lbl_battery_percent) {
+        lv_label_set_text_fmt(ui->lbl_battery_percent, "%d%%", battery_percent);
+    }
+
+    // Update menu screen
+    if (ui->lbl_time_menu) {
+        lv_label_set_text(ui->lbl_time_menu, time_str);
+    }
+    if (ui->lbl_battery_percent_menu) {
+        lv_label_set_text_fmt(ui->lbl_battery_percent_menu, "%d%%", battery_percent);
+    }
+
+    // Update notify screen
+    if (ui->lbl_time_notify) {
+        lv_label_set_text(ui->lbl_time_notify, time_str);
+    }
+    if (ui->lbl_battery_percent_notify) {
+        lv_label_set_text_fmt(ui->lbl_battery_percent_notify, "%d%%", battery_percent);
+    }
+
+    // Update temp screen
+    if (ui->lbl_time_temp) {
+        lv_label_set_text(ui->lbl_time_temp, time_str);
+    }
+    if (ui->lbl_battery_percent_temp) {
+        lv_label_set_text_fmt(ui->lbl_battery_percent_temp, "%d%%", battery_percent);
+    }
+
+    // Update HR screen
+    if (ui->lbl_time_hr) {
+        lv_label_set_text(ui->lbl_time_hr, time_str);
+    }
+    if (ui->lbl_battery_percent_hr) {
+        lv_label_set_text_fmt(ui->lbl_battery_percent_hr, "%d%%", battery_percent);
+    }
+
+    // Update data screen
+    if (ui->lbl_time_data) {
+        lv_label_set_text(ui->lbl_time_data, time_str);
+    }
+    if (ui->lbl_battery_percent_data) {
+        lv_label_set_text_fmt(ui->lbl_battery_percent_data, "%d%%", battery_percent);
+    }
+
+    // Update settings screen
+    if (ui->lbl_time_settings) {
+        lv_label_set_text(ui->lbl_time_settings, time_str);
+    }
+    if (ui->lbl_battery_percent_settings) {
+        lv_label_set_text_fmt(ui->lbl_battery_percent_settings, "%d%%", battery_percent);
+    }
+
+    // Update WiFi screen
+    if (ui->lbl_time_wifi) {
+        lv_label_set_text(ui->lbl_time_wifi, time_str);
+    }
+    if (ui->lbl_battery_percent_wifi) {
+        lv_label_set_text_fmt(ui->lbl_battery_percent_wifi, "%d%%", battery_percent);
+    }
+
+    // Update Bluetooth screen
+    if (ui->lbl_time_bluetooth) {
+        lv_label_set_text(ui->lbl_time_bluetooth, time_str);
+    }
+    if (ui->lbl_battery_percent_bluetooth) {
+        lv_label_set_text_fmt(ui->lbl_battery_percent_bluetooth, "%d%%", battery_percent);
+    }
+
+    // Update battery icon color based on percentage for all screens
+    lv_color_t battery_color;
+    const char *battery_icon;
+    
+    if (battery_percent > 75) {
+        battery_color = lv_color_hex(0x41D958); // Green
+        battery_icon = LV_SYMBOL_BATTERY_FULL;
+    } else if (battery_percent > 50) {
+        battery_color = lv_color_hex(0xFFEB3B); // Yellow
+        battery_icon = LV_SYMBOL_BATTERY_3;
+    } else if (battery_percent > 25) {
+        battery_color = lv_color_hex(0xFF9800); // Orange
+        battery_icon = LV_SYMBOL_BATTERY_2;
+    } else {
+        battery_color = lv_color_hex(0xFF5722); // Red
+        battery_icon = LV_SYMBOL_BATTERY_1;
+    }
+
+    // Update all battery icons
+    lv_obj_t *battery_icons[] = {
+        ui->lbl_battery_icon,           // home
+        ui->lbl_battery_icon_menu,      // menu
+        ui->lbl_battery_icon_notify,    // notify
+        ui->lbl_battery_icon_temp,      // temp
+        ui->lbl_battery_icon_hr,        // hr
+        ui->lbl_battery_icon_data,      // data
+        ui->lbl_battery_icon_settings,  // settings
+        ui->lbl_battery_icon_wifi,      // wifi
+        ui->lbl_battery_icon_bluetooth  // bluetooth
+    };
+
+    for (int i = 0; i < sizeof(battery_icons) / sizeof(battery_icons[0]); i++) {
+        if (battery_icons[i]) {
+            lv_obj_set_style_text_color(battery_icons[i], battery_color, LV_PART_MAIN);
+            lv_label_set_text(battery_icons[i], battery_icon);
+        }
+    }
+}
+
+void ui_create_status_bar(lv_obj_t *screen, lv_obj_t **time_label, lv_obj_t **battery_percent, lv_obj_t **battery_icon)
+{
+    // Time label
+    *time_label = lv_label_create(screen);
+    lv_label_set_text(*time_label, "17:36");
+    lv_obj_set_style_text_font(*time_label, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_set_style_text_color(*time_label, lv_color_white(), LV_PART_MAIN);
+    lv_obj_align(*time_label, LV_ALIGN_TOP_LEFT, 4, 4);
+
+    // Battery percent
+    *battery_percent = lv_label_create(screen);
+    lv_obj_set_style_text_font(*battery_percent, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_label_set_text(*battery_percent, "80%");
+    lv_obj_set_style_text_color(*battery_percent, lv_color_white(), LV_PART_MAIN);
+    lv_obj_align(*battery_percent, LV_ALIGN_TOP_RIGHT, -20, 5);
+
+    // Battery icon
+    *battery_icon = lv_label_create(screen);
+    lv_obj_set_style_text_font(*battery_icon, &lv_font_montserrat_12, LV_PART_MAIN);
+    lv_label_set_text(*battery_icon, LV_SYMBOL_BATTERY_3);
+    lv_obj_set_style_text_color(*battery_icon, lv_color_hex(0x41D958), LV_PART_MAIN);
+    lv_obj_align(*battery_icon, LV_ALIGN_TOP_RIGHT, -4, 3.5);
 }
