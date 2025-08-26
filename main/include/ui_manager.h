@@ -36,6 +36,7 @@ typedef enum
     UI_STATE_HR,
     UI_STATE_GPS,
     UI_STATE_DATA,
+    UI_STATE_SETTING,
     UI_STATE_WIFI,
     UI_STATE_BLUETOOTH
 } ui_state_t;
@@ -64,6 +65,7 @@ typedef struct
     lv_obj_t *scr_bluetooth;
     lv_obj_t *scr_notify;
     lv_obj_t *scr_data;
+    lv_obj_t *scr_settings;
 
     /* Common widgets */
     lv_obj_t *lbl_battery;
@@ -73,9 +75,14 @@ typedef struct
     lv_obj_t *lbl_hr_dashboard;
     lv_obj_t *lbl_spo2_dashboard;
     lv_obj_t *lbl_temp_dashboard;
+    lv_obj_t *lbl_time;
+    lv_obj_t *battery_container;
+    lv_obj_t *lbl_battery_icon;
+    lv_obj_t *lbl_battery_fill;
+    lv_obj_t *lbl_battery_percent;
 
-    lv_obj_t *bar_temp; 
-    lv_obj_t *bar_hr;  
+    lv_obj_t *bar_temp;
+    lv_obj_t *bar_hr;
     lv_obj_t *bar_spo2;
 
     /* Status for wifi and bluetooth*/
@@ -88,10 +95,12 @@ typedef struct
 
     /* Menu (single lv_list) */
     lv_obj_t *list_menu;
+    lv_obj_t *list_settings;
     /* Menu data */
     menu_item_t menu_items[10];
     int menu_item_count;
     int selected_index;
+    int settings_selected_index;
 
     /* Temp screen */
     lv_obj_t *lbl_temp;

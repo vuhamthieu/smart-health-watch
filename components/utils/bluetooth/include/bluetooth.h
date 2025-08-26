@@ -35,6 +35,7 @@ esp_err_t bluetooth_send_notification(const char* title, const char* message);
 
 // Check if client is connected
 bool bluetooth_is_connected(void);
+bool bluetooth_is_advertising(void);
 esp_err_t bluetooth_disconnect(void);
 
 #ifdef __cplusplus
