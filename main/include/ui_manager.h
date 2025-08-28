@@ -89,6 +89,10 @@ typedef struct
     lv_obj_t *lbl_time_wifi, *lbl_battery_percent_wifi, *lbl_battery_icon_wifi;
     lv_obj_t *lbl_time_bluetooth, *lbl_battery_percent_bluetooth, *lbl_battery_icon_bluetooth;
 
+    lv_obj_t *arc_temp;
+    lv_obj_t *chart_hr;
+    lv_obj_t *chart_spo2;
+    lv_obj_t *chart_hr_main;
 
     lv_obj_t *bar_temp;
     lv_obj_t *bar_hr;

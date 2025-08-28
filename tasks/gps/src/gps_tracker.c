@@ -1,4 +1,3 @@
-// In tasks/gps/src/gps_tracker.c:
 
 #include "gps_tracker.h"
 #include "driver/uart.h"

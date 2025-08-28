@@ -208,7 +208,7 @@ void sensor_manager_task(void *pv)
         case UI_STATE_HR:
         {
             health_data_t hd = {0};
-            if (health_get_data_protected(&hd)) // Use protected version
+            if (health_get_data_protected(&hd)) 
             {
                 if ((hd.heart_rate != raw_hr || hd.spo2 != raw_sp) &&
                     (current_time - last_http_send >= HTTP_SEND_INTERVAL))

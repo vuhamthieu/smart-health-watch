@@ -16,7 +16,6 @@ static bool s_connected = false;
 static void publish_status(const char* status)
 {
     if (!s_connected && strcmp(status, "connected") == 0) {
-        // Avoid publishing before flag set, but ok to publish in handler after flag
     }
     if (s_status_topic[0] == '\0') return;
     esp_mqtt_client_publish(s_client, s_status_topic, status, 0, 1, true);
@@ -53,7 +52,6 @@ esp_err_t mqttc_init(const char* uri, const char* client_id) {
     if (!s_client) return ESP_FAIL;
     ESP_ERROR_CHECK(esp_mqtt_client_register_event(s_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL));
 
-    // Prepare status topic
     snprintf(s_status_topic, sizeof(s_status_topic), "%s/status", MQTT_TOPIC_BASE);
 
     return ESP_OK;
