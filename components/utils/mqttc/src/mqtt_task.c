@@ -84,14 +84,12 @@ void mqtt_client_task(void *pv)
 
     for (;;)
     {
-        // Ensure WiFi is connected
         if (!is_wifi_connected())
         {
             vTaskDelay(pdMS_TO_TICKS(1000));
             continue;
         }
 
-        // Start MQTT client once; client handles reconnects internally
         static bool client_started = false;
         if (!client_started)
         {
@@ -103,11 +101,9 @@ void mqtt_client_task(void *pv)
                 continue;
             }
             client_started = true;
-            // Give some time for connection to complete
             vTaskDelay(pdMS_TO_TICKS(500));
         }
 
-        // Consume queue messages and publish
         if (xQueueReceive(http_queue, &msg, pdMS_TO_TICKS(200)) == pdTRUE)
         {
             switch (msg.data_type)
@@ -129,12 +125,10 @@ void mqtt_client_task(void *pv)
                 break;
             }
 
-            // Optional small delay between publishes
             vTaskDelay(pdMS_TO_TICKS(100));
         }
         else
         {
-            // Idle delay
             vTaskDelay(pdMS_TO_TICKS(50));
         }
     }

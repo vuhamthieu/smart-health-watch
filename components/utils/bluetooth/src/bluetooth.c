@@ -231,12 +231,10 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
         if (param->write.handle == s_handle_table[HEALTH_IDX_CMD_VAL])
         {
             ESP_LOGI(TAG, "Command received: %.*s", param->write.len, param->write.value);
-            // Handle commands here (e.g., change sampling rate, calibrate, etc.)
         }
         else if (param->write.handle == s_handle_table[HEALTH_IDX_NOTIFY_VAL])
         {
             ESP_LOGI(TAG, "Notification received from phone: %.*s", param->write.len, param->write.value);
-            // Handle phone notifications here (display on watch screen)
         }
         break;
 
@@ -343,7 +341,7 @@ esp_err_t bluetooth_notify_heart_rate(uint16_t hr, uint8_t spo2)
     hr_data[0] = hr & 0xFF;
     hr_data[1] = (hr >> 8) & 0xFF;
     hr_data[2] = spo2;
-    hr_data[3] = 0; // Reserved
+    hr_data[3] = 0; 
 
     return esp_ble_gatts_send_indicate(s_gatts_if, s_conn_id, s_handle_table[HEALTH_IDX_HR_VAL],
                                        sizeof(hr_data), hr_data, false);

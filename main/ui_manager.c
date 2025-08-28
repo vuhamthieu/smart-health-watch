@@ -22,7 +22,6 @@ static TickType_t last_button_time = 0;
 
 #define BUTTON_COOLDOWN_MS 200
 
-// Thêm biểu tượng ">" vào cuối mỗi menu item
 static const char *labels[] = {"Notifications", "Body Temp", "Heart Rate", "Dashboard", "Settings"};
 
 static const char *settings_labels[] = {"WiFi", "Bluetooth"};
@@ -155,18 +154,17 @@ void ui_create_settings_menu(ui_manager_t *ui)
 
     for (int i = 0; i < 2; i++)
     {
-        // Create container for each settings menu item
+       
         lv_obj_t *item_container = lv_obj_create(ui->list_settings);
         lv_obj_set_size(item_container, LV_PCT(100), item_height);
         lv_obj_add_style(item_container, &style_menu_item, 0);
         lv_obj_set_style_bg_opa(item_container, LV_OPA_TRANSP, LV_PART_MAIN);
         lv_obj_set_style_border_width(item_container, 0, LV_PART_MAIN);
 
-        // Use flex to position text and arrow
         lv_obj_set_flex_flow(item_container, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(item_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-        // Create label for menu text
+   
         lv_obj_t *item_label = lv_label_create(item_container);
         lv_obj_set_style_text_font(item_label, &lv_font_montserrat_10, LV_PART_MAIN);
         lv_label_set_text(item_label, settings_labels[i]);
@@ -301,15 +299,14 @@ void ui_manager_init(ui_manager_t *ui)
     ui->menu_items[3] = (menu_item_t){"Dashboard", UI_STATE_DATA};
     ui->menu_items[4] = (menu_item_t){"Settings", UI_STATE_SETTING};
 
-    // Set dark theme globally
     lv_theme_t *theme = lv_theme_default_init(lv_disp_get_default(),
-                                              lv_color_white(),       // Primary color
-                                              lv_color_hex(0x333333), // Secondary color
-                                              true,                   // Dark mode
+                                              lv_color_white(),       
+                                              lv_color_hex(0x333333), 
+                                              true,                
                                               LV_FONT_DEFAULT);
     lv_disp_set_theme(lv_disp_get_default(), theme);
 
-    /* ---------- HOME SCREEN - Dark Style ---------- */
+    /* ---------- HOME SCREEN---------- */
     ui->scr_home = lv_obj_create(NULL);
 
     lv_obj_t *img_bg = lv_img_create(ui->scr_home);
@@ -342,7 +339,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_color(ui->lbl_battery_icon, lv_color_hex(0x41D958), LV_PART_MAIN);
     lv_obj_align(ui->lbl_battery_icon, LV_ALIGN_TOP_RIGHT, -4, 3.5);
 
-    /* ---------- MENU - Modern Dark Style ---------- */
+    /* ---------- MENU---------- */
     ui_create_menu(ui);
 
     /* ---------- Notifications ---------- */
@@ -350,7 +347,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_bg_color(ui->scr_notify, lv_color_black(), LV_PART_MAIN);
     ui_create_status_bar(ui->scr_notify, &ui->lbl_time_notify, &ui->lbl_battery_percent_notify, &ui->lbl_battery_icon_notify);
 
-    /* ---------- DASHBOARD - Modern Clean Style ----------*/
+    /* ---------- DASHBOARD----------*/
     ui->scr_data = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_data, lv_color_black(), LV_PART_MAIN);
     ui_create_status_bar(ui->scr_data, &ui->lbl_time_data, &ui->lbl_battery_percent_data, &ui->lbl_battery_icon_data);
@@ -361,7 +358,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_font(lbl_data_title, &lv_font_montserrat_14, LV_PART_MAIN);
     lv_obj_align(lbl_data_title, LV_ALIGN_TOP_MID, 0, 25);
 
-    // Temperature bar (directly on screen, no container)
+    // Temperature bar
     ui->bar_temp = lv_bar_create(ui->scr_data);
     lv_obj_set_size(ui->bar_temp, 100, 8);
     lv_bar_set_range(ui->bar_temp, 0, 50);
@@ -375,7 +372,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_style_set_radius(&bar_style_temp, 4);
     lv_obj_add_style(ui->bar_temp, &bar_style_temp, 0);
 
-    // HR bar (left side)
+    // HR bar 
     ui->bar_hr = lv_bar_create(ui->scr_data);
     lv_obj_set_size(ui->bar_hr, 55, 8);
     lv_bar_set_range(ui->bar_hr, 0, 200);
@@ -389,7 +386,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_style_set_radius(&bar_style_hr, 4);
     lv_obj_add_style(ui->bar_hr, &bar_style_hr, 0);
 
-    // SpO2 bar (right side)
+    // SpO2 bar
     ui->bar_spo2 = lv_bar_create(ui->scr_data);
     lv_obj_set_size(ui->bar_spo2, 55, 8);
     lv_bar_set_range(ui->bar_spo2, 0, 100);
@@ -403,25 +400,25 @@ void ui_manager_init(ui_manager_t *ui)
     lv_style_set_radius(&bar_style_spo2, 4);
     lv_obj_add_style(ui->bar_spo2, &bar_style_spo2, 0);
 
-    // Temperature label (below temp bar)
+    // Temperature label
     ui->lbl_temp_dashboard = lv_label_create(ui->scr_data);
     lv_label_set_text(ui->lbl_temp_dashboard, "Temp: -- °C");
     lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0xFF6B35), LV_PART_MAIN);
     lv_obj_align(ui->lbl_temp_dashboard, LV_ALIGN_TOP_MID, 0, 50);
 
-    // HR label (below HR bar, left side)
+    // HR label 
     ui->lbl_hr_dashboard = lv_label_create(ui->scr_data);
     lv_label_set_text(ui->lbl_hr_dashboard, "HR: --");
     lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFF1744), LV_PART_MAIN);
     lv_obj_align(ui->lbl_hr_dashboard, LV_ALIGN_TOP_LEFT, 8, 90);
 
-    // SpO2 label (below SpO2 bar, right side - different line)
+    // SpO2 label
     ui->lbl_spo2_dashboard = lv_label_create(ui->scr_data);
     lv_label_set_text(ui->lbl_spo2_dashboard, "SpO2: --%");
     lv_obj_set_style_text_color(ui->lbl_spo2_dashboard, lv_color_hex(0x00E676), LV_PART_MAIN);
     lv_obj_align(ui->lbl_spo2_dashboard, LV_ALIGN_TOP_RIGHT, -8, 105);
 
-    /* ---------- TEMPERATURE - Professional Dark ---------- */
+    /* ---------- TEMPERATURE---------- */
     ui->scr_temp = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_temp, lv_color_black(), LV_PART_MAIN);
     ui_create_status_bar(ui->scr_temp, &ui->lbl_time_temp, &ui->lbl_battery_percent_temp, &ui->lbl_battery_icon_temp);
@@ -433,7 +430,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_font(lbl_temp_title, &lv_font_montserrat_14, LV_PART_MAIN);
     lv_obj_align(lbl_temp_title, LV_ALIGN_TOP_MID, 0, 25);
 
-    // Content area - simplified
+    // Content area 
     ui->lbl_temp = lv_label_create(ui->scr_temp);
     lv_label_set_text(ui->lbl_temp, "Press SELECT\nto scan");
     lv_obj_set_style_text_align(ui->lbl_temp, LV_TEXT_ALIGN_CENTER, 0);
@@ -441,7 +438,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_font(ui->lbl_temp, &lv_font_montserrat_12, LV_PART_MAIN);
     lv_obj_align(ui->lbl_temp, LV_ALIGN_CENTER, 0, 10); 
 
-    /* ---------- HEART RATE - Clean Black & White ---------- */
+    /* ---------- HEART RATE ---------- */
     ui->scr_hr = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_hr, lv_color_black(), LV_PART_MAIN);
     ui_create_status_bar(ui->scr_hr, &ui->lbl_time_hr, &ui->lbl_battery_percent_hr, &ui->lbl_battery_icon_hr);
@@ -467,7 +464,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_font(ui->lbl_spo2, &lv_font_montserrat_12, LV_PART_MAIN);
     lv_obj_align(ui->lbl_spo2, LV_ALIGN_CENTER, 0, 15);
 
-    /* -------- WIFI - Clean Black & White --------- */
+    /* -------- WIFI--------- */
     ui->scr_wifi = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_wifi, lv_color_black(), LV_PART_MAIN);
     ui_create_status_bar(ui->scr_wifi, &ui->lbl_time_wifi, &ui->lbl_battery_percent_wifi, &ui->lbl_battery_icon_wifi);
@@ -495,7 +492,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_font(lbl_wifi_instruction, &lv_font_montserrat_10, LV_PART_MAIN);
     lv_obj_align(lbl_wifi_instruction, LV_ALIGN_BOTTOM_MID, 0, -20);
 
-    /* -------- BLUETOOTH - Clean Black & White ---------*/
+    /* -------- BLUETOOTH ---------*/
     ui->scr_bluetooth = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_bluetooth, lv_color_black(), LV_PART_MAIN);
      ui_create_status_bar(ui->scr_bluetooth, &ui->lbl_time_bluetooth, &ui->lbl_battery_percent_bluetooth, &ui->lbl_battery_icon_bluetooth);
@@ -534,7 +531,6 @@ void ui_manager_init(ui_manager_t *ui)
 
 void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
 {
-    // Add comprehensive safety check
     if (ui == NULL)
     {
         ESP_LOGE("UI_MANAGER", "UI manager is NULL in button handler");
@@ -551,7 +547,6 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
     }
     last_button_time = current_time;
 
-    // Add comprehensive safety check
     if (ui == NULL)
     {
         ESP_LOGE(TAG, "UI manager is NULL in button handler");
@@ -748,14 +743,12 @@ void ui_manager_handle_button(ui_manager_t *ui, button_id_t btn)
 
 void ui_switch(ui_manager_t *ui, ui_state_t new_state)
 {
-    // Safety check for ui pointer
     if (ui == NULL)
     {
         ESP_LOGE("UI_MANAGER", "UI manager is NULL");
         return;
     }
 
-    // Stop any ongoing animations first
     lv_anim_del_all();
 
     ui->current_state = new_state;
@@ -809,25 +802,21 @@ void ui_switch(ui_manager_t *ui, ui_state_t new_state)
         break;
     }
 
-    // Enhanced safety checks
     if (target == NULL)
     {
         ESP_LOGE("UI_MANAGER", "Target screen is NULL for state %d", new_state);
-        // Force fallback to home
         target = ui->scr_home;
         ui->current_state = UI_STATE_HOME;
     }
 
     if (target != NULL && lv_obj_is_valid(target))
     {
-        // Use simple load instead of animation to avoid race conditions
         lv_scr_load(target);
         ESP_LOGI("UI_MANAGER", "Switched to state %d", new_state);
     }
     else
     {
         ESP_LOGE("UI_MANAGER", "Failed to switch to state %d - invalid target", new_state);
-        // Last resort: try to load home screen without animation
         if (ui->scr_home != NULL)
         {
             lv_obj_clean(lv_disp_get_scr_act(NULL));
@@ -978,7 +967,7 @@ void ui_update_dashboard(ui_manager_t *ui)
 
 void ui_update_all_status_bars(ui_manager_t *ui, const char *time_str, int battery_percent)
 {
-    // Update home screen (existing)
+    // Update home screen 
     if (ui->lbl_time) {
         lv_label_set_text(ui->lbl_time, time_str);
     }
@@ -1070,15 +1059,15 @@ void ui_update_all_status_bars(ui_manager_t *ui, const char *time_str, int batte
 
     // Update all battery icons
     lv_obj_t *battery_icons[] = {
-        ui->lbl_battery_icon,           // home
-        ui->lbl_battery_icon_menu,      // menu
-        ui->lbl_battery_icon_notify,    // notify
-        ui->lbl_battery_icon_temp,      // temp
-        ui->lbl_battery_icon_hr,        // hr
-        ui->lbl_battery_icon_data,      // data
-        ui->lbl_battery_icon_settings,  // settings
-        ui->lbl_battery_icon_wifi,      // wifi
-        ui->lbl_battery_icon_bluetooth  // bluetooth
+        ui->lbl_battery_icon,          
+        ui->lbl_battery_icon_menu,     
+        ui->lbl_battery_icon_notify,   
+        ui->lbl_battery_icon_temp,     
+        ui->lbl_battery_icon_hr,      
+        ui->lbl_battery_icon_data,      
+        ui->lbl_battery_icon_settings,  
+        ui->lbl_battery_icon_wifi,    
+        ui->lbl_battery_icon_bluetooth  
     };
 
     for (int i = 0; i < sizeof(battery_icons) / sizeof(battery_icons[0]); i++) {
