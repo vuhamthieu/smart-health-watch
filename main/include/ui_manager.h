@@ -22,7 +22,7 @@ extern const lv_img_dsc_t bluetooth_icon;
 #define DATA_ICON (&data_icon)
 #define NOTIFY_ICON (&notify_icon)
 
-#define SCREEN_TIMEOUT_MS 20000
+#define SCREEN_TIMEOUT_MS 30000
 #define TFT_BL_PIN 19
 
 typedef enum
@@ -89,14 +89,24 @@ typedef struct
     lv_obj_t *lbl_time_wifi, *lbl_battery_percent_wifi, *lbl_battery_icon_wifi;
     lv_obj_t *lbl_time_bluetooth, *lbl_battery_percent_bluetooth, *lbl_battery_icon_bluetooth;
 
-    lv_obj_t *arc_temp;
-    lv_obj_t *chart_hr;
     lv_obj_t *chart_spo2;
     lv_obj_t *chart_hr_main;
 
     lv_obj_t *bar_temp;
     lv_obj_t *bar_hr;
     lv_obj_t *bar_spo2;
+
+    // Temperature arc gauge
+    lv_obj_t *arc_temp;
+    lv_obj_t *lbl_temp_arc_value;
+    
+    // HR/SpO2 chart
+    lv_obj_t *chart_hr;
+    lv_chart_series_t *ser_hr;
+    lv_chart_series_t *ser_spo2;
+    int hr_data_points[20]; 
+    int spo2_data_points[20]; 
+    int data_index;
 
     /* Status for wifi and bluetooth*/
     lv_obj_t *lbl_wifi_status;
@@ -164,3 +174,5 @@ void ui_update_dashboard(ui_manager_t *ui);
 void ui_create_status_bar(lv_obj_t *screen, lv_obj_t **time_label, lv_obj_t **battery_percent, lv_obj_t **battery_icon);
 
 void ui_update_all_status_bars(ui_manager_t *ui, const char *time_str, int battery_percent);
+
+void ui_add_hr_data_point(ui_manager_t *ui, int hr);

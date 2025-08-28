@@ -69,7 +69,7 @@ void ui_create_menu(ui_manager_t *ui)
     lv_obj_clear_flag(ui->list_menu, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_scroll_dir(ui->list_menu, LV_DIR_NONE);
 
-     lv_obj_set_style_border_width(ui->list_menu, 0, LV_PART_SCROLLBAR);
+    lv_obj_set_style_border_width(ui->list_menu, 0, LV_PART_SCROLLBAR);
 
     lv_obj_set_flex_flow(ui->list_menu, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(ui->list_menu, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -154,7 +154,7 @@ void ui_create_settings_menu(ui_manager_t *ui)
 
     for (int i = 0; i < 2; i++)
     {
-       
+
         lv_obj_t *item_container = lv_obj_create(ui->list_settings);
         lv_obj_set_size(item_container, LV_PCT(100), item_height);
         lv_obj_add_style(item_container, &style_menu_item, 0);
@@ -164,7 +164,6 @@ void ui_create_settings_menu(ui_manager_t *ui)
         lv_obj_set_flex_flow(item_container, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(item_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-   
         lv_obj_t *item_label = lv_label_create(item_container);
         lv_obj_set_style_text_font(item_label, &lv_font_montserrat_10, LV_PART_MAIN);
         lv_label_set_text(item_label, settings_labels[i]);
@@ -300,9 +299,9 @@ void ui_manager_init(ui_manager_t *ui)
     ui->menu_items[4] = (menu_item_t){"Settings", UI_STATE_SETTING};
 
     lv_theme_t *theme = lv_theme_default_init(lv_disp_get_default(),
-                                              lv_color_white(),       
-                                              lv_color_hex(0x333333), 
-                                              true,                
+                                              lv_color_white(),
+                                              lv_color_hex(0x333333),
+                                              true,
                                               LV_FONT_DEFAULT);
     lv_disp_set_theme(lv_disp_get_default(), theme);
 
@@ -372,7 +371,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_style_set_radius(&bar_style_temp, 4);
     lv_obj_add_style(ui->bar_temp, &bar_style_temp, 0);
 
-    // HR bar 
+    // HR bar
     ui->bar_hr = lv_bar_create(ui->scr_data);
     lv_obj_set_size(ui->bar_hr, 55, 8);
     lv_bar_set_range(ui->bar_hr, 0, 200);
@@ -406,7 +405,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0xFF6B35), LV_PART_MAIN);
     lv_obj_align(ui->lbl_temp_dashboard, LV_ALIGN_TOP_MID, 0, 50);
 
-    // HR label 
+    // HR label
     ui->lbl_hr_dashboard = lv_label_create(ui->scr_data);
     lv_label_set_text(ui->lbl_hr_dashboard, "HR: --");
     lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFF1744), LV_PART_MAIN);
@@ -430,13 +429,48 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_font(lbl_temp_title, &lv_font_montserrat_14, LV_PART_MAIN);
     lv_obj_align(lbl_temp_title, LV_ALIGN_TOP_MID, 0, 25);
 
-    // Content area 
+    // Temperature Arc Gauge
+    ui->arc_temp = lv_arc_create(ui->scr_temp);
+    lv_obj_set_size(ui->arc_temp, 80, 80);
+    lv_obj_align(ui->arc_temp, LV_ALIGN_CENTER, 0, -5);
+    lv_arc_set_range(ui->arc_temp, 30, 45);
+    lv_arc_set_value(ui->arc_temp, 36);
+    lv_arc_set_bg_angles(ui->arc_temp, 135, 45);
+
+    // Style for arc background
+    static lv_style_t style_arc_bg;
+    lv_style_init(&style_arc_bg);
+    lv_style_set_arc_width(&style_arc_bg, 8);
+    lv_style_set_arc_color(&style_arc_bg, lv_color_hex(0x333333));
+    lv_obj_add_style(ui->arc_temp, &style_arc_bg, LV_PART_MAIN);
+
+    // Style for arc indicator
+    static lv_style_t style_arc_indic;
+    lv_style_init(&style_arc_indic);
+    lv_style_set_arc_width(&style_arc_indic, 8);
+    lv_style_set_arc_color(&style_arc_indic, lv_color_hex(0xFF6B35));
+    lv_obj_add_style(ui->arc_temp, &style_arc_indic, LV_PART_INDICATOR);
+
+    // Remove knob
+    lv_obj_clear_flag(ui->arc_temp, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_bg_opa(ui->arc_temp, LV_OPA_TRANSP, LV_PART_KNOB);
+    lv_obj_set_style_pad_all(ui->arc_temp, 0, LV_PART_KNOB);
+
+    // Temperature value label in center of arc
+    ui->lbl_temp_arc_value = lv_label_create(ui->scr_temp);
+    lv_label_set_text(ui->lbl_temp_arc_value, "36.5°C");
+    lv_obj_set_style_text_font(ui->lbl_temp_arc_value, &lv_font_montserrat_12, LV_PART_MAIN);
+    lv_obj_set_style_text_color(ui->lbl_temp_arc_value, lv_color_white(), LV_PART_MAIN);
+    lv_obj_set_style_text_align(ui->lbl_temp_arc_value, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(ui->lbl_temp_arc_value, LV_ALIGN_CENTER, 0, -5);
+
+    // Instruction text below arc
     ui->lbl_temp = lv_label_create(ui->scr_temp);
-    lv_label_set_text(ui->lbl_temp, "Press SELECT\nto scan");
+    lv_label_set_text(ui->lbl_temp, "Press SELECT to scan");
     lv_obj_set_style_text_align(ui->lbl_temp, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(ui->lbl_temp, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(ui->lbl_temp, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_obj_align(ui->lbl_temp, LV_ALIGN_CENTER, 0, 10); 
+    lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xAAAAAA), LV_PART_MAIN);
+    lv_obj_set_style_text_font(ui->lbl_temp, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_align(ui->lbl_temp, LV_ALIGN_CENTER, 0, 50);
 
     /* ---------- HEART RATE ---------- */
     ui->scr_hr = lv_obj_create(NULL);
@@ -445,25 +479,76 @@ void ui_manager_init(ui_manager_t *ui)
 
     // Title
     lv_obj_t *lbl_hr_title = lv_label_create(ui->scr_hr);
-    lv_label_set_text(lbl_hr_title, "Heart rate");
+    lv_label_set_text(lbl_hr_title, "Heart Rate Monitor");
     lv_obj_set_style_text_color(lbl_hr_title, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(lbl_hr_title, &lv_font_montserrat_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(lbl_hr_title, &lv_font_montserrat_12, LV_PART_MAIN);
     lv_obj_align(lbl_hr_title, LV_ALIGN_TOP_MID, 0, 25);
 
-    // HR display
+    // ========== HR SECTION ==========
+    // HR display label
     ui->lbl_hr = lv_label_create(ui->scr_hr);
-    lv_label_set_text(ui->lbl_hr, "HR: -- bpm");
-    lv_obj_set_style_text_color(ui->lbl_hr, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(ui->lbl_hr, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_obj_align(ui->lbl_hr, LV_ALIGN_CENTER, 0, -5);
+    lv_label_set_text(ui->lbl_hr, "Heart Rate: -- bpm");
+    lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFF1744), LV_PART_MAIN);
+    lv_obj_set_style_text_font(ui->lbl_hr, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_align(ui->lbl_hr, LV_ALIGN_TOP_LEFT, 8, 42);
 
-    // SpO2 display
+    // Create HR chart (riêng biệt)
+    ui->chart_hr = lv_chart_create(ui->scr_hr);
+    lv_obj_set_size(ui->chart_hr, 112, 35);
+    lv_obj_align(ui->chart_hr, LV_ALIGN_TOP_MID, 0, 55);
+    lv_chart_set_type(ui->chart_hr, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(ui->chart_hr, 20);
+    lv_chart_set_range(ui->chart_hr, LV_CHART_AXIS_PRIMARY_Y, 40, 160);
+
+    // Style for HR chart
+    static lv_style_t style_chart_hr;
+    lv_style_init(&style_chart_hr);
+    lv_style_set_bg_color(&style_chart_hr, lv_color_hex(0x2a1a1a));
+    lv_style_set_bg_opa(&style_chart_hr, LV_OPA_COVER);
+    lv_style_set_border_width(&style_chart_hr, 1);
+    lv_style_set_border_color(&style_chart_hr, lv_color_hex(0xFF1744));
+    lv_style_set_pad_all(&style_chart_hr, 3);
+    lv_obj_add_style(ui->chart_hr, &style_chart_hr, 0);
+
+    // Create series for HR (red line)
+    ui->ser_hr = lv_chart_add_series(ui->chart_hr, lv_color_hex(0xFF1744), LV_CHART_AXIS_PRIMARY_Y);
+
+    // ========== SPO2 SECTION ==========
+    // SpO2 display label
     ui->lbl_spo2 = lv_label_create(ui->scr_hr);
-    lv_label_set_text(ui->lbl_spo2, "SpO2: --%");
-    lv_obj_set_style_text_color(ui->lbl_spo2, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(ui->lbl_spo2, &lv_font_montserrat_12, LV_PART_MAIN);
-    lv_obj_align(ui->lbl_spo2, LV_ALIGN_CENTER, 0, 15);
+    lv_label_set_text(ui->lbl_spo2, "Blood Oxygen: --%");
+    lv_obj_set_style_text_color(ui->lbl_spo2, lv_color_hex(0x00E676), LV_PART_MAIN);
+    lv_obj_set_style_text_font(ui->lbl_spo2, &lv_font_montserrat_10, LV_PART_MAIN);
+    lv_obj_align(ui->lbl_spo2, LV_ALIGN_TOP_LEFT, 8, 97);
 
+    // Create SpO2 chart (riêng biệt)
+    ui->chart_spo2 = lv_chart_create(ui->scr_hr);
+    lv_obj_set_size(ui->chart_spo2, 112, 35);
+    lv_obj_align(ui->chart_spo2, LV_ALIGN_TOP_MID, 0, 110);
+    lv_chart_set_type(ui->chart_spo2, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(ui->chart_spo2, 20);
+    lv_chart_set_range(ui->chart_spo2, LV_CHART_AXIS_PRIMARY_Y, 85, 100);
+
+    // Style for SpO2 chart
+    static lv_style_t style_chart_spo2;
+    lv_style_init(&style_chart_spo2);
+    lv_style_set_bg_color(&style_chart_spo2, lv_color_hex(0x1a2a1a));
+    lv_style_set_bg_opa(&style_chart_spo2, LV_OPA_COVER);
+    lv_style_set_border_width(&style_chart_spo2, 1);
+    lv_style_set_border_color(&style_chart_spo2, lv_color_hex(0x00E676));
+    lv_style_set_pad_all(&style_chart_spo2, 3);
+    lv_obj_add_style(ui->chart_spo2, &style_chart_spo2, 0);
+
+    // Create series for SpO2 (green line)
+    ui->ser_spo2 = lv_chart_add_series(ui->chart_spo2, lv_color_hex(0x00E676), LV_CHART_AXIS_PRIMARY_Y);
+
+    // Initialize data arrays
+    ui->data_index = 0;
+    for (int i = 0; i < 20; i++)
+    {
+        ui->hr_data_points[i] = 0;
+        ui->spo2_data_points[i] = 95;
+    }
     /* -------- WIFI--------- */
     ui->scr_wifi = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_wifi, lv_color_black(), LV_PART_MAIN);
@@ -495,7 +580,7 @@ void ui_manager_init(ui_manager_t *ui)
     /* -------- BLUETOOTH ---------*/
     ui->scr_bluetooth = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(ui->scr_bluetooth, lv_color_black(), LV_PART_MAIN);
-     ui_create_status_bar(ui->scr_bluetooth, &ui->lbl_time_bluetooth, &ui->lbl_battery_percent_bluetooth, &ui->lbl_battery_icon_bluetooth);
+    ui_create_status_bar(ui->scr_bluetooth, &ui->lbl_time_bluetooth, &ui->lbl_battery_percent_bluetooth, &ui->lbl_battery_icon_bluetooth);
 
     // Title
     lv_obj_t *lbl_bluetooth_title = lv_label_create(ui->scr_bluetooth);
@@ -836,6 +921,42 @@ void ui_set_battery(ui_manager_t *ui, int p)
     lv_label_set_text_fmt(ui->lbl_battery, LV_SYMBOL_BATTERY_FULL " %d%%", p);
 }
 
+void ui_add_hr_data_point(ui_manager_t *ui, int hr)
+{
+    if (!ui || ui->current_state != UI_STATE_HR)
+        return;
+
+    // Store HR data point
+    ui->hr_data_points[ui->data_index] = hr;
+
+    // Update HR chart with all data points
+    lv_chart_set_all_value(ui->chart_hr, ui->ser_hr, 0);
+    for (int i = 0; i < 20; i++)
+    {
+        int idx = (ui->data_index + i + 1) % 20;
+        lv_chart_set_next_value(ui->chart_hr, ui->ser_hr, ui->hr_data_points[idx]);
+    }
+    lv_chart_refresh(ui->chart_hr);
+}
+
+void ui_add_spo2_data_point(ui_manager_t *ui, int spo2)
+{
+    if (!ui || ui->current_state != UI_STATE_HR)
+        return;
+
+    // Store SpO2 data point
+    ui->spo2_data_points[ui->data_index] = spo2;
+
+    // Update SpO2 chart with all data points
+    lv_chart_set_all_value(ui->chart_spo2, ui->ser_spo2, 0);
+    for (int i = 0; i < 20; i++)
+    {
+        int idx = (ui->data_index + i + 1) % 20;
+        lv_chart_set_next_value(ui->chart_spo2, ui->ser_spo2, ui->spo2_data_points[idx]);
+    }
+    lv_chart_refresh(ui->chart_spo2);
+}
+
 void ui_update_temp(ui_manager_t *ui, float t)
 {
     if (ui->current_state < UI_STATE_TEMP_IDLE || ui->current_state > UI_STATE_TEMP_RESULT)
@@ -843,33 +964,66 @@ void ui_update_temp(ui_manager_t *ui, float t)
 
     if (ui->current_state == UI_STATE_TEMP_SCANNING)
     {
-        lv_label_set_text(ui->lbl_temp, "Measuring...\nPlease wait 10s");
-        lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xFFEB3B), LV_PART_MAIN); // Yellow
+        lv_label_set_text(ui->lbl_temp, "Measuring... Please wait");
+        lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
+        lv_label_set_text(ui->lbl_temp_arc_value, "Scanning...");
+        lv_obj_set_style_text_color(ui->lbl_temp_arc_value, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
+
+        // Animate arc during scanning
+        static lv_style_t style_arc_scanning;
+        lv_style_init(&style_arc_scanning);
+        lv_style_set_arc_color(&style_arc_scanning, lv_color_hex(0xFFEB3B));
+        lv_obj_add_style(ui->arc_temp, &style_arc_scanning, LV_PART_INDICATOR);
     }
     else if (t < -273.0f || isnan(t))
     {
-        lv_label_set_text(ui->lbl_temp, "Sensor Error\nPress SELECT");
-        lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xFF5722), LV_PART_MAIN); // Red
+        lv_label_set_text(ui->lbl_temp, "Sensor Error - Press SELECT");
+        lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xFF5722), LV_PART_MAIN);
+        lv_label_set_text(ui->lbl_temp_arc_value, "ERROR");
+        lv_obj_set_style_text_color(ui->lbl_temp_arc_value, lv_color_hex(0xFF5722), LV_PART_MAIN);
+        lv_arc_set_value(ui->arc_temp, 30);
+
+        static lv_style_t style_arc_error;
+        lv_style_init(&style_arc_error);
+        lv_style_set_arc_color(&style_arc_error, lv_color_hex(0xFF5722));
+        lv_obj_add_style(ui->arc_temp, &style_arc_error, LV_PART_INDICATOR);
     }
     else
     {
-        char temp_str[60];
-        snprintf(temp_str, sizeof(temp_str), "%.1f°C\n\nPress SELECT\nto rescan", t);
-        lv_label_set_text(ui->lbl_temp, temp_str);
+        char temp_str[20];
+        snprintf(temp_str, sizeof(temp_str), "%.1f°C", t);
+        lv_label_set_text(ui->lbl_temp_arc_value, temp_str);
+        lv_label_set_text(ui->lbl_temp, "Press SELECT to rescan");
+        lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xAAAAAA), LV_PART_MAIN);
 
-        // Color based on temperature
+        // Update arc value
+        int arc_value = (int)t;
+        if (arc_value < 30)
+            arc_value = 30;
+        if (arc_value > 45)
+            arc_value = 45;
+        lv_arc_set_value(ui->arc_temp, arc_value);
+
+        lv_color_t temp_color;
         if (t > 37.5)
         {
-            lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0xFF5722), LV_PART_MAIN); // Red - fever
+            temp_color = lv_color_hex(0xFF5722); // Red
         }
         else if (t > 36.0)
         {
-            lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0x4CAF50), LV_PART_MAIN); // Green - normal
+            temp_color = lv_color_hex(0x4CAF50); // Green
         }
         else
         {
-            lv_obj_set_style_text_color(ui->lbl_temp, lv_color_hex(0x2196F3), LV_PART_MAIN); // Blue - low
+            temp_color = lv_color_hex(0x2196F3); // Blue
         }
+
+        lv_obj_set_style_text_color(ui->lbl_temp_arc_value, temp_color, LV_PART_MAIN);
+
+        static lv_style_t style_arc_temp;
+        lv_style_init(&style_arc_temp);
+        lv_style_set_arc_color(&style_arc_temp, temp_color);
+        lv_obj_add_style(ui->arc_temp, &style_arc_temp, LV_PART_INDICATOR);
     }
 }
 
@@ -877,28 +1031,46 @@ void ui_update_hr(ui_manager_t *ui, int hr, int spo2)
 {
     if (hr > 0 && spo2 > 0)
     {
-        lv_label_set_text_fmt(ui->lbl_hr, "%d BPM", hr);
-        lv_label_set_text_fmt(ui->lbl_spo2, "%d%% SpO2", spo2);
+        lv_label_set_text_fmt(ui->lbl_hr, "Heart Rate: %d bpm", hr);
+        lv_label_set_text_fmt(ui->lbl_spo2, "Blood Oxygen: %d%%", spo2);
+
+        // Add data points to both graphs
+        ui_add_hr_data_point(ui, hr);
+        ui_add_spo2_data_point(ui, spo2);
+
+        // Update data index for next reading
+        ui->data_index = (ui->data_index + 1) % 20;
 
         // Color coding for HR
         if (hr > 100)
         {
-            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFF5722), LV_PART_MAIN); // Red - high
+            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFF5722), LV_PART_MAIN);
         }
         else if (hr >= 60)
         {
-            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0x4CAF50), LV_PART_MAIN); // Green - normal
+            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0x4CAF50), LV_PART_MAIN);
         }
         else
         {
-            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFFC107), LV_PART_MAIN); // Yellow - low
+            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFFC107), LV_PART_MAIN);
         }
-    }
-    else
-    {
-        lv_label_set_text(ui->lbl_hr, LV_SYMBOL_LOOP "Scanning...");
-        lv_label_set_text(ui->lbl_spo2, "Please wait");
-        lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
+
+        // Color coding for SpO2
+        if (spo2 >= 95)
+        {
+            lv_obj_set_style_text_color(ui->lbl_spo2, lv_color_hex(0x4CAF50), LV_PART_MAIN);
+        }
+        else if (spo2 >= 90)
+        {
+            lv_obj_set_style_text_color(ui->lbl_spo2, lv_color_hex(0xFFC107), LV_PART_MAIN);
+        }
+        else
+        {
+            lv_label_set_text(ui->lbl_hr, "HR: Scanning...");
+            lv_label_set_text(ui->lbl_spo2, "SpO2: Please wait");
+            lv_obj_set_style_text_color(ui->lbl_hr, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
+            lv_obj_set_style_text_color(ui->lbl_spo2, lv_color_hex(0xFFEB3B), LV_PART_MAIN);
+        }
     }
 }
 
@@ -967,111 +1139,137 @@ void ui_update_dashboard(ui_manager_t *ui)
 
 void ui_update_all_status_bars(ui_manager_t *ui, const char *time_str, int battery_percent)
 {
-    // Update home screen 
-    if (ui->lbl_time) {
+    // Update home screen
+    if (ui->lbl_time)
+    {
         lv_label_set_text(ui->lbl_time, time_str);
     }
-    if (ui->lbl_battery_percent) {
+    if (ui->lbl_battery_percent)
+    {
         lv_label_set_text_fmt(ui->lbl_battery_percent, "%d%%", battery_percent);
     }
 
     // Update menu screen
-    if (ui->lbl_time_menu) {
+    if (ui->lbl_time_menu)
+    {
         lv_label_set_text(ui->lbl_time_menu, time_str);
     }
-    if (ui->lbl_battery_percent_menu) {
+    if (ui->lbl_battery_percent_menu)
+    {
         lv_label_set_text_fmt(ui->lbl_battery_percent_menu, "%d%%", battery_percent);
     }
 
     // Update notify screen
-    if (ui->lbl_time_notify) {
+    if (ui->lbl_time_notify)
+    {
         lv_label_set_text(ui->lbl_time_notify, time_str);
     }
-    if (ui->lbl_battery_percent_notify) {
+    if (ui->lbl_battery_percent_notify)
+    {
         lv_label_set_text_fmt(ui->lbl_battery_percent_notify, "%d%%", battery_percent);
     }
 
     // Update temp screen
-    if (ui->lbl_time_temp) {
+    if (ui->lbl_time_temp)
+    {
         lv_label_set_text(ui->lbl_time_temp, time_str);
     }
-    if (ui->lbl_battery_percent_temp) {
+    if (ui->lbl_battery_percent_temp)
+    {
         lv_label_set_text_fmt(ui->lbl_battery_percent_temp, "%d%%", battery_percent);
     }
 
     // Update HR screen
-    if (ui->lbl_time_hr) {
+    if (ui->lbl_time_hr)
+    {
         lv_label_set_text(ui->lbl_time_hr, time_str);
     }
-    if (ui->lbl_battery_percent_hr) {
+    if (ui->lbl_battery_percent_hr)
+    {
         lv_label_set_text_fmt(ui->lbl_battery_percent_hr, "%d%%", battery_percent);
     }
 
     // Update data screen
-    if (ui->lbl_time_data) {
+    if (ui->lbl_time_data)
+    {
         lv_label_set_text(ui->lbl_time_data, time_str);
     }
-    if (ui->lbl_battery_percent_data) {
+    if (ui->lbl_battery_percent_data)
+    {
         lv_label_set_text_fmt(ui->lbl_battery_percent_data, "%d%%", battery_percent);
     }
 
     // Update settings screen
-    if (ui->lbl_time_settings) {
+    if (ui->lbl_time_settings)
+    {
         lv_label_set_text(ui->lbl_time_settings, time_str);
     }
-    if (ui->lbl_battery_percent_settings) {
+    if (ui->lbl_battery_percent_settings)
+    {
         lv_label_set_text_fmt(ui->lbl_battery_percent_settings, "%d%%", battery_percent);
     }
 
     // Update WiFi screen
-    if (ui->lbl_time_wifi) {
+    if (ui->lbl_time_wifi)
+    {
         lv_label_set_text(ui->lbl_time_wifi, time_str);
     }
-    if (ui->lbl_battery_percent_wifi) {
+    if (ui->lbl_battery_percent_wifi)
+    {
         lv_label_set_text_fmt(ui->lbl_battery_percent_wifi, "%d%%", battery_percent);
     }
 
     // Update Bluetooth screen
-    if (ui->lbl_time_bluetooth) {
+    if (ui->lbl_time_bluetooth)
+    {
         lv_label_set_text(ui->lbl_time_bluetooth, time_str);
     }
-    if (ui->lbl_battery_percent_bluetooth) {
+    if (ui->lbl_battery_percent_bluetooth)
+    {
         lv_label_set_text_fmt(ui->lbl_battery_percent_bluetooth, "%d%%", battery_percent);
     }
 
     // Update battery icon color based on percentage for all screens
     lv_color_t battery_color;
     const char *battery_icon;
-    
-    if (battery_percent > 75) {
+
+    if (battery_percent > 75)
+    {
         battery_color = lv_color_hex(0x41D958); // Green
         battery_icon = LV_SYMBOL_BATTERY_FULL;
-    } else if (battery_percent > 50) {
+    }
+    else if (battery_percent > 50)
+    {
         battery_color = lv_color_hex(0xFFEB3B); // Yellow
         battery_icon = LV_SYMBOL_BATTERY_3;
-    } else if (battery_percent > 25) {
+    }
+    else if (battery_percent > 25)
+    {
         battery_color = lv_color_hex(0xFF9800); // Orange
         battery_icon = LV_SYMBOL_BATTERY_2;
-    } else {
+    }
+    else
+    {
         battery_color = lv_color_hex(0xFF5722); // Red
         battery_icon = LV_SYMBOL_BATTERY_1;
     }
 
     // Update all battery icons
     lv_obj_t *battery_icons[] = {
-        ui->lbl_battery_icon,          
-        ui->lbl_battery_icon_menu,     
-        ui->lbl_battery_icon_notify,   
-        ui->lbl_battery_icon_temp,     
-        ui->lbl_battery_icon_hr,      
-        ui->lbl_battery_icon_data,      
-        ui->lbl_battery_icon_settings,  
-        ui->lbl_battery_icon_wifi,    
-        ui->lbl_battery_icon_bluetooth  
-    };
+        ui->lbl_battery_icon,
+        ui->lbl_battery_icon_menu,
+        ui->lbl_battery_icon_notify,
+        ui->lbl_battery_icon_temp,
+        ui->lbl_battery_icon_hr,
+        ui->lbl_battery_icon_data,
+        ui->lbl_battery_icon_settings,
+        ui->lbl_battery_icon_wifi,
+        ui->lbl_battery_icon_bluetooth};
 
-    for (int i = 0; i < sizeof(battery_icons) / sizeof(battery_icons[0]); i++) {
-        if (battery_icons[i]) {
+    for (int i = 0; i < sizeof(battery_icons) / sizeof(battery_icons[0]); i++)
+    {
+        if (battery_icons[i])
+        {
             lv_obj_set_style_text_color(battery_icons[i], battery_color, LV_PART_MAIN);
             lv_label_set_text(battery_icons[i], battery_icon);
         }
