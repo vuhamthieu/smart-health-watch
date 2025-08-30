@@ -346,76 +346,140 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_bg_color(ui->scr_notify, lv_color_black(), LV_PART_MAIN);
     ui_create_status_bar(ui->scr_notify, &ui->lbl_time_notify, &ui->lbl_battery_percent_notify, &ui->lbl_battery_icon_notify);
 
-    /* ---------- DASHBOARD----------*/
-    ui->scr_data = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(ui->scr_data, lv_color_black(), LV_PART_MAIN);
-    ui_create_status_bar(ui->scr_data, &ui->lbl_time_data, &ui->lbl_battery_percent_data, &ui->lbl_battery_icon_data);
+    /* ---------- DASHBOARD ----------*/
+ui->scr_data = lv_obj_create(NULL);
+lv_obj_set_style_bg_color(ui->scr_data, lv_color_black(), LV_PART_MAIN);
 
-    lv_obj_t *lbl_data_title = lv_label_create(ui->scr_data);
-    lv_label_set_text(lbl_data_title, "Dashboard");
-    lv_obj_set_style_text_color(lbl_data_title, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-    lv_obj_set_style_text_font(lbl_data_title, &lv_font_montserrat_14, LV_PART_MAIN);
-    lv_obj_align(lbl_data_title, LV_ALIGN_TOP_MID, 0, 25);
+ui_create_status_bar(ui->scr_data, &ui->lbl_time_data, &ui->lbl_battery_percent_data, &ui->lbl_battery_icon_data);
 
-    // Temperature bar
-    ui->bar_temp = lv_bar_create(ui->scr_data);
-    lv_obj_set_size(ui->bar_temp, 100, 8);
-    lv_bar_set_range(ui->bar_temp, 0, 50);
-    lv_bar_set_value(ui->bar_temp, 0, LV_ANIM_OFF);
-    lv_obj_align(ui->bar_temp, LV_ALIGN_TOP_MID, 0, 50);
-    static lv_style_t bar_style_temp;
-    lv_style_init(&bar_style_temp);
-    lv_style_set_bg_color(&bar_style_temp, lv_color_hex(0x2a2a2a));
-    lv_style_set_bg_opa(&bar_style_temp, LV_OPA_COVER);
-    lv_style_set_border_width(&bar_style_temp, 0);
-    lv_style_set_radius(&bar_style_temp, 4);
-    lv_obj_add_style(ui->bar_temp, &bar_style_temp, 0);
+// Dashboard title
+lv_obj_t *lbl_data_title = lv_label_create(ui->scr_data);
+lv_label_set_text(lbl_data_title, "Dashboard");
+lv_obj_set_style_text_color(lbl_data_title, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+lv_obj_set_style_text_font(lbl_data_title, &lv_font_montserrat_14, LV_PART_MAIN);
+lv_obj_align(lbl_data_title, LV_ALIGN_TOP_MID, 0, 25);
 
-    // HR bar
-    ui->bar_hr = lv_bar_create(ui->scr_data);
-    lv_obj_set_size(ui->bar_hr, 55, 8);
-    lv_bar_set_range(ui->bar_hr, 0, 200);
-    lv_bar_set_value(ui->bar_hr, 0, LV_ANIM_OFF);
-    lv_obj_align(ui->bar_hr, LV_ALIGN_TOP_LEFT, 8, 75);
-    static lv_style_t bar_style_hr;
-    lv_style_init(&bar_style_hr);
-    lv_style_set_bg_color(&bar_style_hr, lv_color_hex(0x2a2a2a));
-    lv_style_set_bg_opa(&bar_style_hr, LV_OPA_COVER);
-    lv_style_set_border_width(&bar_style_hr, 0);
-    lv_style_set_radius(&bar_style_hr, 4);
-    lv_obj_add_style(ui->bar_hr, &bar_style_hr, 0);
+// Create main container for better organization
+lv_obj_t *data_container = lv_obj_create(ui->scr_data);
+lv_obj_set_size(data_container, 130, 100);
+lv_obj_set_style_bg_opa(data_container, LV_OPA_TRANSP, LV_PART_MAIN);
+lv_obj_set_style_border_width(data_container, 0, LV_PART_MAIN);
+lv_obj_set_style_pad_all(data_container, 4, LV_PART_MAIN);
+lv_obj_align(data_container, LV_ALIGN_CENTER, 0, 10);
 
-    // SpO2 bar
-    ui->bar_spo2 = lv_bar_create(ui->scr_data);
-    lv_obj_set_size(ui->bar_spo2, 55, 8);
-    lv_bar_set_range(ui->bar_spo2, 0, 100);
-    lv_bar_set_value(ui->bar_spo2, 0, LV_ANIM_OFF);
-    lv_obj_align(ui->bar_spo2, LV_ALIGN_TOP_RIGHT, -8, 75);
-    static lv_style_t bar_style_spo2;
-    lv_style_init(&bar_style_spo2);
-    lv_style_set_bg_color(&bar_style_spo2, lv_color_hex(0x2a2a2a));
-    lv_style_set_bg_opa(&bar_style_spo2, LV_OPA_COVER);
-    lv_style_set_border_width(&bar_style_spo2, 0);
-    lv_style_set_radius(&bar_style_spo2, 4);
-    lv_obj_add_style(ui->bar_spo2, &bar_style_spo2, 0);
+// ===== TEMPERATURE SECTION =====
+// Temperature label
+ui->lbl_temp_dashboard = lv_label_create(data_container);
+lv_label_set_text(ui->lbl_temp_dashboard, "Temp");
+lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0xFF6B35), LV_PART_MAIN);
+lv_obj_set_style_text_font(ui->lbl_temp_dashboard, &lv_font_montserrat_10, LV_PART_MAIN);
+lv_obj_align(ui->lbl_temp_dashboard, LV_ALIGN_TOP_LEFT, 0, 0);
 
-    // Temperature label
-    ui->lbl_temp_dashboard = lv_label_create(ui->scr_data);
-    lv_label_set_text(ui->lbl_temp_dashboard, "Temp: -- °C");
-    lv_obj_set_style_text_color(ui->lbl_temp_dashboard, lv_color_hex(0xFF6B35), LV_PART_MAIN);
-    lv_obj_align(ui->lbl_temp_dashboard, LV_ALIGN_TOP_MID, 0, 50);
+// Temperature value
+lv_obj_t *lbl_temp_value = lv_label_create(data_container);
+lv_label_set_text(lbl_temp_value, "-- °C");
+lv_obj_set_style_text_color(lbl_temp_value, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+lv_obj_set_style_text_font(lbl_temp_value, &lv_font_montserrat_12, LV_PART_MAIN);
+lv_obj_align(lbl_temp_value, LV_ALIGN_TOP_RIGHT, 0, 0);
 
-    // HR label
-    ui->lbl_hr_dashboard = lv_label_create(ui->scr_data);
-    lv_label_set_text(ui->lbl_hr_dashboard, "HR: --");
-    lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFF1744), LV_PART_MAIN);
-    lv_obj_align(ui->lbl_hr_dashboard, LV_ALIGN_TOP_LEFT, 8, 90);
+// Temperature bar
+ui->bar_temp = lv_bar_create(data_container);
+lv_obj_set_size(ui->bar_temp, 122, 4);
+lv_bar_set_range(ui->bar_temp, 0, 50);
+lv_bar_set_value(ui->bar_temp, 0, LV_ANIM_OFF);
+lv_obj_align(ui->bar_temp, LV_ALIGN_TOP_MID, 0, 15);
 
-    // SpO2 label
-    ui->lbl_spo2_dashboard = lv_label_create(ui->scr_data);
-    lv_label_set_text(ui->lbl_spo2_dashboard, "SpO2: --%");
-    lv_obj_set_style_text_color(ui->lbl_spo2_dashboard, lv_color_hex(0x00E676), LV_PART_MAIN);
-    lv_obj_align(ui->lbl_spo2_dashboard, LV_ALIGN_TOP_RIGHT, -8, 105);
+// Temperature bar style
+static lv_style_t bar_style_temp;
+lv_style_init(&bar_style_temp);
+lv_style_set_bg_color(&bar_style_temp, lv_color_hex(0x2a2a2a));
+lv_style_set_bg_opa(&bar_style_temp, LV_OPA_COVER);
+lv_style_set_border_width(&bar_style_temp, 0);
+lv_style_set_radius(&bar_style_temp, 3);
+lv_obj_add_style(ui->bar_temp, &bar_style_temp, LV_PART_MAIN);
+
+// Temperature bar indicator style
+static lv_style_t bar_indic_temp;
+lv_style_init(&bar_indic_temp);
+lv_style_set_bg_color(&bar_indic_temp, lv_color_hex(0xFF6B35));
+lv_style_set_radius(&bar_indic_temp, 3);
+lv_obj_add_style(ui->bar_temp, &bar_indic_temp, LV_PART_INDICATOR);
+
+// ===== HEART RATE SECTION =====
+// HR label
+ui->lbl_hr_dashboard = lv_label_create(data_container);
+lv_label_set_text(ui->lbl_hr_dashboard, "HR");
+lv_obj_set_style_text_color(ui->lbl_hr_dashboard, lv_color_hex(0xFF1744), LV_PART_MAIN);
+lv_obj_set_style_text_font(ui->lbl_hr_dashboard, &lv_font_montserrat_10, LV_PART_MAIN);
+lv_obj_align(ui->lbl_hr_dashboard, LV_ALIGN_TOP_LEFT, 0, 30);
+
+// HR value
+lv_obj_t *lbl_hr_value = lv_label_create(data_container);
+lv_label_set_text(lbl_hr_value, "--");
+lv_obj_set_style_text_color(lbl_hr_value, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+lv_obj_set_style_text_font(lbl_hr_value, &lv_font_montserrat_12, LV_PART_MAIN);
+lv_obj_align(lbl_hr_value, LV_ALIGN_TOP_RIGHT, 0, 30);
+
+// HR bar
+ui->bar_hr = lv_bar_create(data_container);
+lv_obj_set_size(ui->bar_hr, 122, 4);
+lv_bar_set_range(ui->bar_hr, 0, 200);
+lv_bar_set_value(ui->bar_hr, 0, LV_ANIM_OFF);
+lv_obj_align(ui->bar_hr, LV_ALIGN_TOP_MID, 0, 45);
+
+// HR bar style
+static lv_style_t bar_style_hr;
+lv_style_init(&bar_style_hr);
+lv_style_set_bg_color(&bar_style_hr, lv_color_hex(0x2a2a2a));
+lv_style_set_bg_opa(&bar_style_hr, LV_OPA_COVER);
+lv_style_set_border_width(&bar_style_hr, 0);
+lv_style_set_radius(&bar_style_hr, 3);
+lv_obj_add_style(ui->bar_hr, &bar_style_hr, LV_PART_MAIN);
+
+// HR bar indicator style
+static lv_style_t bar_indic_hr;
+lv_style_init(&bar_indic_hr);
+lv_style_set_bg_color(&bar_indic_hr, lv_color_hex(0xFF1744));
+lv_style_set_radius(&bar_indic_hr, 3);
+lv_obj_add_style(ui->bar_hr, &bar_indic_hr, LV_PART_INDICATOR);
+
+// ===== SPO2 SECTION =====
+// SpO2 label
+ui->lbl_spo2_dashboard = lv_label_create(data_container);
+lv_label_set_text(ui->lbl_spo2_dashboard, "SpO2");
+lv_obj_set_style_text_color(ui->lbl_spo2_dashboard, lv_color_hex(0x00E676), LV_PART_MAIN);
+lv_obj_set_style_text_font(ui->lbl_spo2_dashboard, &lv_font_montserrat_10, LV_PART_MAIN);
+lv_obj_align(ui->lbl_spo2_dashboard, LV_ALIGN_TOP_LEFT, 0, 60);
+
+// SpO2 value
+lv_obj_t *lbl_spo2_value = lv_label_create(data_container);
+lv_label_set_text(lbl_spo2_value, "--%");
+lv_obj_set_style_text_color(lbl_spo2_value, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
+lv_obj_set_style_text_font(lbl_spo2_value, &lv_font_montserrat_12, LV_PART_MAIN);
+lv_obj_align(lbl_spo2_value, LV_ALIGN_TOP_RIGHT, 0, 60);
+
+// SpO2 bar
+ui->bar_spo2 = lv_bar_create(data_container);
+lv_obj_set_size(ui->bar_spo2, 122, 4);
+lv_bar_set_range(ui->bar_spo2, 0, 100);
+lv_bar_set_value(ui->bar_spo2, 0, LV_ANIM_OFF);
+lv_obj_align(ui->bar_spo2, LV_ALIGN_TOP_MID, 0, 75);
+
+// SpO2 bar style
+static lv_style_t bar_style_spo2;
+lv_style_init(&bar_style_spo2);
+lv_style_set_bg_color(&bar_style_spo2, lv_color_hex(0x2a2a2a));
+lv_style_set_bg_opa(&bar_style_spo2, LV_OPA_COVER);
+lv_style_set_border_width(&bar_style_spo2, 0);
+lv_style_set_radius(&bar_style_spo2, 3);
+lv_obj_add_style(ui->bar_spo2, &bar_style_spo2, LV_PART_MAIN);
+
+// SpO2 bar indicator style
+static lv_style_t bar_indic_spo2;
+lv_style_init(&bar_indic_spo2);
+lv_style_set_bg_color(&bar_indic_spo2, lv_color_hex(0x00E676));
+lv_style_set_radius(&bar_indic_spo2, 3);
+lv_obj_add_style(ui->bar_spo2, &bar_indic_spo2, LV_PART_INDICATOR);
 
     /* ---------- TEMPERATURE---------- */
     ui->scr_temp = lv_obj_create(NULL);
@@ -426,13 +490,14 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_t *lbl_temp_title = lv_label_create(ui->scr_temp);
     lv_label_set_text(lbl_temp_title, "Temperature");
     lv_obj_set_style_text_color(lbl_temp_title, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(lbl_temp_title, &lv_font_montserrat_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(lbl_temp_title, &lv_font_montserrat_12, LV_PART_MAIN);
     lv_obj_align(lbl_temp_title, LV_ALIGN_TOP_MID, 0, 25);
 
     // Temperature Arc Gauge
     ui->arc_temp = lv_arc_create(ui->scr_temp);
     lv_obj_set_size(ui->arc_temp, 80, 80);
     lv_obj_align(ui->arc_temp, LV_ALIGN_CENTER, 0, -5);
+     lv_obj_align(ui->arc_temp, LV_ALIGN_TOP_MID, 0, 45);
     lv_arc_set_range(ui->arc_temp, 30, 45);
     lv_arc_set_value(ui->arc_temp, 36);
     lv_arc_set_bg_angles(ui->arc_temp, 135, 45);
@@ -451,7 +516,6 @@ void ui_manager_init(ui_manager_t *ui)
     lv_style_set_arc_color(&style_arc_indic, lv_color_hex(0xFF6B35));
     lv_obj_add_style(ui->arc_temp, &style_arc_indic, LV_PART_INDICATOR);
 
-    // Remove knob
     lv_obj_clear_flag(ui->arc_temp, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_bg_opa(ui->arc_temp, LV_OPA_TRANSP, LV_PART_KNOB);
     lv_obj_set_style_pad_all(ui->arc_temp, 0, LV_PART_KNOB);
@@ -462,6 +526,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_font(ui->lbl_temp_arc_value, &lv_font_montserrat_12, LV_PART_MAIN);
     lv_obj_set_style_text_color(ui->lbl_temp_arc_value, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_align(ui->lbl_temp_arc_value, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align(ui->lbl_temp_arc_value, LV_ALIGN_TOP_MID, 0, 65);
     lv_obj_align(ui->lbl_temp_arc_value, LV_ALIGN_CENTER, 0, -5);
 
     // Instruction text below arc
@@ -492,7 +557,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_font(ui->lbl_hr, &lv_font_montserrat_10, LV_PART_MAIN);
     lv_obj_align(ui->lbl_hr, LV_ALIGN_TOP_LEFT, 8, 42);
 
-    // Create HR chart (riêng biệt)
+    // Create HR chart 
     ui->chart_hr = lv_chart_create(ui->scr_hr);
     lv_obj_set_size(ui->chart_hr, 112, 35);
     lv_obj_align(ui->chart_hr, LV_ALIGN_TOP_MID, 0, 55);
@@ -510,8 +575,9 @@ void ui_manager_init(ui_manager_t *ui)
     lv_style_set_pad_all(&style_chart_hr, 3);
     lv_obj_add_style(ui->chart_hr, &style_chart_hr, 0);
 
-    // Create series for HR (red line)
+    // Create series for HR 
     ui->ser_hr = lv_chart_add_series(ui->chart_hr, lv_color_hex(0xFF1744), LV_CHART_AXIS_PRIMARY_Y);
+    lv_obj_set_style_line_width(ui->chart_hr, 1, LV_PART_ITEMS);
 
     // ========== SPO2 SECTION ==========
     // SpO2 display label
@@ -521,7 +587,7 @@ void ui_manager_init(ui_manager_t *ui)
     lv_obj_set_style_text_font(ui->lbl_spo2, &lv_font_montserrat_10, LV_PART_MAIN);
     lv_obj_align(ui->lbl_spo2, LV_ALIGN_TOP_LEFT, 8, 97);
 
-    // Create SpO2 chart (riêng biệt)
+    // Create SpO2 chart 
     ui->chart_spo2 = lv_chart_create(ui->scr_hr);
     lv_obj_set_size(ui->chart_spo2, 112, 35);
     lv_obj_align(ui->chart_spo2, LV_ALIGN_TOP_MID, 0, 110);
@@ -541,6 +607,8 @@ void ui_manager_init(ui_manager_t *ui)
 
     // Create series for SpO2 (green line)
     ui->ser_spo2 = lv_chart_add_series(ui->chart_spo2, lv_color_hex(0x00E676), LV_CHART_AXIS_PRIMARY_Y);
+    lv_obj_set_style_line_width(ui->chart_spo2, 1, LV_PART_ITEMS);
+
 
     // Initialize data arrays
     ui->data_index = 0;
